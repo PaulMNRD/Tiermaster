@@ -1,0 +1,18 @@
+{
+  "name": "tiermaster",
+  "version": "0.0.1",
+  "author": "Paul Menard",
+  "license": "TBD",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build:shared": "pnpm --filter @tiermaster/shared run build",
+    "build": "pnpm -r run build",
+    "test": "pnpm -r --if-present run test"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  }
+}
