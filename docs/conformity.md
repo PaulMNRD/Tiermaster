@@ -32,3 +32,11 @@ Updated at the end of every slice. Status: ✅ done, 🟡 partial, ⏳ todo, ⛔
 | Revoked / demoted mid-session (REST) | roles-and-permissions.md | 5 | ✅ | `content.spec.ts` (`revoked mid-session`, `demoted mid-session`) |
 | Shared reducer (`applyEvent`) and ordering helpers | real-time-collaboration.md | 5 | ✅ | `shared/src/domain/tierlist-state.spec.ts` |
 | Tierlist page: categories, cards, unsorted pool; 401 and "not found or private" screens | request | 5 | ✅ | front `tierlist.page.spec.ts` |
+| Socket.IO gateway on `/ws`, optional token, invalid token disconnects | real-time-collaboration.md | 6 | ✅ | `api/test/realtime/realtime.spec.ts` |
+| `join` validated, access via `AccessService`, `not_found` without role, ack `{effectiveRole, rev}`, anonymous capped | real-time-collaboration.md | 6 | ✅ | `realtime.spec.ts` (`rejected`, anonymous tests) |
+| Events broadcast after commit with `rev` and `clientOpId`, only to the room | real-time-collaboration.md | 6 | ✅ | `realtime.spec.ts` (broadcast, outsider) |
+| Live re-evaluation: defaultRole change evicts or downgrades, deletion evicts | roles-and-permissions.md | 6 | ✅ | `realtime.spec.ts` (`revoked mid-session`) |
+| Optimistic UI: pending ops, confirmation by HTTP or event, rollback on 4xx, retry with same clientOpId | real-time-collaboration.md | 6 | ✅ | front `tierlist.store.spec.ts` |
+| Gap detection, `/ops` replay, 410 snapshot reload, rejoin and resync after reconnection | real-time-collaboration.md | 6 | ✅ | `tierlist.store.spec.ts` |
+| Drag and drop (mobile-first: touch delay, mixed orientation), card/category editing UI | request | 6 | 🟡 | `tierlist.page.ts` (CDK); rendering tested in `tierlist.page.spec.ts`, gestures not automated (no E2E) |
+| Connection status indicator with manual retry | request | 6 | ✅ | `ui/connection-indicator.ts`, `RealtimeService` |

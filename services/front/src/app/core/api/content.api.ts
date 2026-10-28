@@ -13,6 +13,7 @@ import {
   TierlistSnapshotSchema,
   type UpdateCard,
   type UpdateCategory,
+  type UpdateTierlist,
   WriteResultSchema,
 } from '@tiermaster/shared';
 import { firstValueFrom } from 'rxjs';
@@ -64,6 +65,11 @@ export class ContentApi {
 
   deleteCategory(id: string, categoryId: string, clientOpId: string) {
     return this.send(WriteResultSchema, this.http.delete(`/api/tierlists/${id}/categories/${categoryId}`, { params: { clientOpId } }));
+  }
+
+  /** Rename (or change the default role); the answer also carries the summary, only the rev matters here. */
+  renameTierlist(id: string, body: UpdateTierlist) {
+    return this.send(WriteResultSchema, this.http.patch(`/api/tierlists/${id}`, body));
   }
 
   private async send<S extends z.ZodType>(schema: S, request: ReturnType<HttpClient['get']>): Promise<z.infer<S>> {

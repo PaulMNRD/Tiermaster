@@ -10,6 +10,8 @@ export interface TestApp {
   app: INestApplication;
   prisma: PrismaService;
   config: AppConfig;
+  /** Base URL of the listening server (HTTP and Socket.IO). */
+  url: string;
   close(): Promise<void>;
 }
 
@@ -20,6 +22,7 @@ export async function createTestApp(overrides: Partial<Record<string, string>> =
   const moduleRef = await Test.createTestingModule({ imports: [AppModule.forRoot(config)] }).compile();
   const app = moduleRef.createNestApplication();
   configureApp(app);
-  await app.init();
-  return { app, prisma: app.get(PrismaService), config, close: () => app.close() };
+  await app.listen(0, '127.0.0.1');
+  const url = await app.getUrl();
+  return { app, prisma: app.get(PrismaService), config, url, close: () => app.close() };
 }

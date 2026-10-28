@@ -40,7 +40,7 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 - `GET /api/tierlists/:id/ops?since=` with 410 when the gap is too large.
 - Front: tierlist page rendering categories, cards and an "unsorted" pool.
 
-### 6. Real-time — todo
+### 6. Real-time — done
 - Socket.IO gateway on `/ws`; optional handshake token, invalid token disconnects.
 - `join` validated by zod, access via `AccessService`, `not_found` without role, ack `{effectiveRole, rev}`.
 - Events broadcast after commit to room `tierlist:{id}`, carrying `rev` and `clientOpId`.
@@ -132,6 +132,17 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
   same function for its optimistic guess. An anchor that is not in the target list gives 409 `stale_position`.
 - **Limits**: 500 cards and 30 categories per tierlist (409 `limit_reached`); `/ops` serves at most 500 ops, beyond that 410.
 - **Deleting a category** moves its cards to the end of the pool with fresh positions, carried in the `category.deleted` event.
+- **Socket messages**: `event` (a TierlistEvent), `access.revoked` {reason: revoked | deleted}, `role.changed` {effectiveRole},
+  `notification`, `auth_error`. The doc's "member.updated (new effective role)" push is named `role.changed` to avoid a clash
+  with the `member.updated` op type.
+- **Gateway authentication** runs in `handleConnection`; `join` awaits it, so a join sent right after connecting is safe.
+  Authenticated sockets also join `user:{id}` for personal notifications.
+- **Re-evaluation** (`access.changed`) resolves the role of each connected socket (optionally only some users) instead of
+  evicting blindly, as in roles-and-permissions.md.
+- **Client store**: confirmed state + pending ops replayed on top (`applyEvent`); an op is confirmed by its own event or by its
+  HTTP rev once the confirmed state reaches it (with a 1.5 s catch-up fallback); network errors retry 3 times with the same
+  `clientOpId`; 404/409 trigger a resync. Category reordering uses up/down buttons (accessible on phones) rather than drag.
+- **Connection indicator** was pulled forward from slice 9 into slice 6 (it belongs with the reconnection logic).
 - **Versions**: all packages share one version, bumped by `scripts/set-version.mjs` (minor per slice: slice N -> 0.N.0).
 
 ## Added dependencies
@@ -143,6 +154,10 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 | removed `vite-tsconfig-paths` | api (dev) | 2 | Vite now resolves tsconfig paths natively |
 | `tailwindcss`, `@tailwindcss/postcss`, `postcss` | front (dev) | 3 | Design system (stack) |
 | `zod` | front | 3 | Validates API responses with the shared schemas (needed since the front compiles shared from source) |
+| `@nestjs/websockets`, `@nestjs/platform-socket.io`, `socket.io` | api | 6 | Real-time gateway (stack) |
+| `socket.io-client` | api (dev), front | 6 | Multi-client gateway tests; SPA real-time link |
+| `@angular/cdk` | front | 6 | Touch-friendly drag and drop |
+| bumped `@nestjs/common`, `core`, `platform-express`, `testing` to 12.3 | api | 6 | Must match `@nestjs/websockets` 12.3 |
 
 ## Open questions / needs your input
 - OAuth client credentials for Google and Discord, and a Steam Web API key (production). Until then only the fake provider works

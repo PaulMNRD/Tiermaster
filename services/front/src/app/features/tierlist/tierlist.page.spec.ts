@@ -2,49 +2,37 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import type { TierlistSnapshot } from '@tiermaster/shared';
+import { signal } from '@angular/core';
 import { I18nService } from '../../core/i18n/i18n.service';
-import { settle } from '../../../testing/helpers';
+import { RealtimeService } from '../../core/realtime/realtime.service';
+import { settle, snapshot } from '../../../testing/helpers';
 import TierlistPage from './tierlist.page';
 
+let joinRole = 'VIEWER';
 const ID = '00000000-0000-4000-8000-000000000001';
-const S = '00000000-0000-4000-8000-0000000000a1';
-const A = '00000000-0000-4000-8000-0000000000a2';
 
-export function snapshot(overrides: Partial<TierlistSnapshot> = {}): TierlistSnapshot {
-  return {
-    id: ID,
-    title: 'Languages',
-    ownerId: '00000000-0000-4000-8000-0000000000ff',
-    defaultRole: 'VIEWER',
-    rev: 3,
-    effectiveRole: 'VIEWER',
-    categories: [
-      { id: A, name: 'A', color: '#f97316', position: 'k' },
-      { id: S, name: 'S', color: '#ef4444', position: 'V' },
-    ],
-    cards: [
-      { id: '00000000-0000-4000-8000-000000000101', categoryId: S, title: 'Rust', imageKey: null, position: 'k' },
-      { id: '00000000-0000-4000-8000-000000000102', categoryId: S, title: 'TypeScript', imageKey: null, position: 'V' },
-      { id: '00000000-0000-4000-8000-000000000103', categoryId: null, title: 'COBOL', imageKey: null, position: 'V' },
-    ],
-    ...overrides,
-  };
-}
-
-describe('TierlistPage (read-only)', () => {
+describe('TierlistPage', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [TierlistPage],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        {
+          provide: RealtimeService,
+          useValue: { status: signal('connected'), on: () => () => {}, onReconnect: () => () => {}, leave: () => {}, join: async () => ({ ok: true, effectiveRole: joinRole, rev: 3 }) },
+        },
+      ],
     });
     TestBed.inject(I18nService).setLang('en');
     http = TestBed.inject(HttpTestingController);
   });
 
-  async function open(respond: () => void) {
+  async function open(respond: () => void, role = 'VIEWER') {
+    joinRole = role;
     const fixture = TestBed.createComponent(TierlistPage);
     fixture.componentRef.setInput('id', ID);
     await settle();
@@ -65,6 +53,18 @@ describe('TierlistPage (read-only)', () => {
       ['Unsorted', 'COBOL'],
     ]);
     expect(el.textContent).toContain('Viewer');
+  });
+
+  it('is read-only for a viewer: no add form, drag disabled', async () => {
+    const el = await open(() => http.expectOne(`/api/tierlists/${ID}`).flush(snapshot()));
+    expect(el.textContent).toContain('Read-only');
+    expect(el.querySelector('input[placeholder="New card"]')).toBeNull();
+    expect(el.querySelector('.cdk-drop-list-disabled')).toBeTruthy();
+  });
+
+  it('lets an editor add cards', async () => {
+    const el = await open(() => http.expectOne(`/api/tierlists/${ID}`).flush(snapshot({ effectiveRole: 'EDITOR' })), 'EDITOR');
+    expect(el.querySelector('input[placeholder="New card"]')).toBeTruthy();
   });
 
   it('shows "not found or private" on 404', async () => {

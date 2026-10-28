@@ -4,6 +4,7 @@ import { BroadcasterModule } from './adapters/realtime/broadcaster.module.js';
 import type { AppConfig } from './config/app-config.js';
 import { ConfigModule } from './config/config.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
+import { RealtimeModule } from './modules/realtime/realtime.module.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { TierlistsModule } from './modules/tierlists/tierlists.module.js';
 import { UsersModule } from './modules/users/users.module.js';
@@ -13,7 +14,16 @@ export class AppModule {
   static forRoot(config?: AppConfig): DynamicModule {
     return {
       module: AppModule,
-      imports: [ConfigModule.forRoot(config), PrismaModule, BroadcasterModule, HealthModule, UsersModule, AuthModule, TierlistsModule],
+      imports: [
+        ConfigModule.forRoot(config),
+        PrismaModule,
+        BroadcasterModule,
+        HealthModule,
+        UsersModule,
+        AuthModule,
+        TierlistsModule,
+        RealtimeModule,
+      ],
     };
   }
 }
