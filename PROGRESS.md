@@ -152,6 +152,13 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 - **User search requires a signed-in user** (the doc calls it public; requiring a session limits scraping) and at least 2
   characters; max 10 results.
 - **Members list** is readable by anyone who can read the tierlist (pseudonyms are public; emails are never returned).
+- **Images**: magic-byte sniffing written in-house (JPEG, PNG, GIF, WebP; SVG refused), sharp re-encoding to WebP (cards
+  512 px, avatars 256 px, first frame only, 40 MP input limit), keys `tierlists/{id}/{uuid}.webp` and `avatars/{userId}/{uuid}.webp`.
+  Card images are served with `private, max-age=300`; avatars are public (`?v=` versioned URL, 1 day). Objects are deleted
+  best effort after the commit (replaced/deleted card image, deleted tierlist prefix, replaced avatar). Uploads never attached
+  to a card stay as orphans (a periodic sweep could be added later).
+- **Storage driver**: `STORAGE_DRIVER=s3|memory`, defaulting to s3 when `S3_ENDPOINT` is set; production refuses memory.
+- **Global exception filter** turns every error (including Multer's 413 and unknown routes) into `{ statusCode, code, message }`.
 - **Connection indicator** was pulled forward from slice 9 into slice 6 (it belongs with the reconnection logic).
 - **Versions**: all packages share one version, bumped by `scripts/set-version.mjs` (minor per slice: slice N -> 0.N.0).
 
@@ -167,6 +174,8 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 | `@nestjs/websockets`, `@nestjs/platform-socket.io`, `socket.io` | api | 6 | Real-time gateway (stack) |
 | `socket.io-client` | api (dev), front | 6 | Multi-client gateway tests; SPA real-time link |
 | `@angular/cdk` | front | 6 | Touch-friendly drag and drop |
+| `sharp` | api | 8 | Server-side re-encoding of uploads (ADR 0003) |
+| `@aws-sdk/client-s3` | api | 8 | Plain S3 API to Garage (AGENTS.md rule 6) |
 | bumped `@nestjs/common`, `core`, `platform-express`, `testing` to 12.3 | api | 6 | Must match `@nestjs/websockets` 12.3 |
 
 ## Open questions / needs your input
