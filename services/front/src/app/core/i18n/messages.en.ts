@@ -73,6 +73,9 @@ export const en = {
   'community.empty': 'No public tierlist found',
   'community.pagination': 'Pagination',
   'community.page': 'Page {page} of {pages}',
+  'tierlist.unsorted': 'Unsorted',
+  'tierlist.poolEmpty': 'No card waiting to be ranked.',
+  'tierlist.noCategory': 'No category yet.',
 } as const;
 
 export type MessageKey = keyof typeof en;

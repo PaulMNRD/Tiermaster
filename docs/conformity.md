@@ -25,3 +25,10 @@ Updated at the end of every slice. Status: ✅ done, 🟡 partial, ⏳ todo, ⛔
 | Rename (EDITOR+), default role and delete (OWNER only), 401/403/404 semantics | roles-and-permissions.md | 4 | ✅ | `tierlists.spec.ts` (`rejected` blocks) |
 | Single-transaction writes: lock, check, rev + 1, op log, idempotent clientOpId | real-time-collaboration.md | 4 | ✅ | `tierlists.spec.ts` (ops and idempotency tests), `TierlistWriter` |
 | Empty, loading and error states (home, community) | request | 4 | ✅ | `home.page.spec.ts` |
+| Snapshot with ordered categories, cards, rev and effective role | real-time-collaboration.md | 5 | ✅ | `api/test/tierlists/content.spec.ts` (snapshot) |
+| Categories: create, rename, reorder, delete (cards to the pool), EDITOR+ | roles-and-permissions.md | 5 | ✅ | `content.spec.ts` (categories) |
+| Cards: create, edit, move (fractional position), delete, EDITOR+; cross-tierlist ids rejected | roles-and-permissions.md, real-time-collaboration.md | 5 | ✅ | `content.spec.ts` (cards) |
+| `GET /ops?since=` with read check, 410 on large gap | real-time-collaboration.md | 5 | ✅ | `content.spec.ts` (ops since) |
+| Revoked / demoted mid-session (REST) | roles-and-permissions.md | 5 | ✅ | `content.spec.ts` (`revoked mid-session`, `demoted mid-session`) |
+| Shared reducer (`applyEvent`) and ordering helpers | real-time-collaboration.md | 5 | ✅ | `shared/src/domain/tierlist-state.spec.ts` |
+| Tierlist page: categories, cards, unsorted pool; 401 and "not found or private" screens | request | 5 | ✅ | front `tierlist.page.spec.ts` |

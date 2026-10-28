@@ -33,7 +33,7 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 - Rename (EDITOR+), change defaultRole and delete (OWNER only); 401/403/404 semantics. (Leave moved to slice 7: it is a membership operation.)
 - Rejected tests for every permission-gated endpoint.
 
-### 5. Categories and cards (REST), read-only tierlist page — todo
+### 5. Categories and cards (REST), read-only tierlist page — done
 - Snapshot `GET /api/tierlists/:id` with categories, cards (ordered), `rev`, `effectiveRole`.
 - Create / edit / delete categories and cards, reorder categories, move cards (fractional positions).
 - Every write: one transaction, permission check, `rev + 1`, op logged, idempotent `clientOpId`.
@@ -126,6 +126,12 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 - **Title sort** uses `lower(title) COLLATE "C"` in SQL and the same comparison in TypeScript, so results do not depend on the
   database locale (Alpine images have no ICU collation by default).
 - **Front data loading** uses Angular `resource()`; tests drive it with `settle()` (`whenStable()` would wait on open requests).
+- **Client-generated ids** (optional uuid) on card and category creation, so the optimistic UI can reference a new item
+  before the server answers; a taken id gives 409 `id_taken`.
+- **Positions are computed by the server** from `afterCardId` / `afterId` with the shared `positionAfter`; the client uses the
+  same function for its optimistic guess. An anchor that is not in the target list gives 409 `stale_position`.
+- **Limits**: 500 cards and 30 categories per tierlist (409 `limit_reached`); `/ops` serves at most 500 ops, beyond that 410.
+- **Deleting a category** moves its cards to the end of the pool with fresh positions, carried in the `category.deleted` event.
 - **Versions**: all packages share one version, bumped by `scripts/set-version.mjs` (minor per slice: slice N -> 0.N.0).
 
 ## Added dependencies

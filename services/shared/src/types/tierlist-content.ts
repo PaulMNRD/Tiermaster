@@ -78,6 +78,8 @@ export const WriteResultSchema = z.object({ rev: z.number().int() });
 export const CreateCategorySchema = z
   .object({
     clientOpId: ClientOpIdSchema.optional(),
+    /** Optional client-generated id, so the optimistic UI can refer to the new category right away. */
+    id: z.uuid().optional(),
     name: z.string().trim().min(1).max(40),
     color: ColorSchema,
     /** Insert after this category; null or absent inserts first. */
@@ -108,6 +110,8 @@ export const ImageKeySchema = z.string().regex(/^tierlists\/[0-9a-f-]{36}\/[0-9a
 export const CreateCardSchema = z
   .object({
     clientOpId: ClientOpIdSchema.optional(),
+    /** Optional client-generated id, so the optimistic UI can refer to the new card right away. */
+    id: z.uuid().optional(),
     title: CardTitleSchema,
     imageKey: ImageKeySchema.nullable().optional(),
     /** Target category; null or absent puts the card in the unsorted pool (at the end). */

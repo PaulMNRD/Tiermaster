@@ -74,4 +74,7 @@ export const fr: Record<MessageKey, string> = {
   'community.empty': 'Aucune tierlist publique trouvée',
   'community.pagination': 'Pagination',
   'community.page': 'Page {page} sur {pages}',
+  'tierlist.unsorted': 'Non classées',
+  'tierlist.poolEmpty': 'Aucune carte en attente de classement.',
+  'tierlist.noCategory': "Aucune catégorie pour l'instant.",
 };
