@@ -26,11 +26,11 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 - Short-lived socket token endpoint for the Socket.IO handshake.
 - Front: app shell, login page, pseudonym page, route guards (auth, pseudonym).
 
-### 4. Tierlists CRUD, home and community pages — todo
+### 4. Tierlists CRUD, home and community pages — done
 - Create a tierlist (owner = creator, default categories S/A/B/C/D).
 - Home lists owned and shared tierlists with the effective role, search and sort.
 - Community lists public tierlists (defaultRole not null), search, sort, pagination.
-- Rename (EDITOR+), change defaultRole and delete (OWNER only), leave (members); 401/403/404 semantics.
+- Rename (EDITOR+), change defaultRole and delete (OWNER only); 401/403/404 semantics. (Leave moved to slice 7: it is a membership operation.)
 - Rejected tests for every permission-gated endpoint.
 
 ### 5. Categories and cards (REST), read-only tierlist page — todo
@@ -117,6 +117,15 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 - **Front i18n** is a runtime dictionary service (`t` pipe), not `@angular/localize`: one build, instant switch; French must
   define every English key (type-checked and tested).
 - **Front imports `@tiermaster/shared` from source** (tsconfig path), so it never uses a stale build.
+- **Access**: `AccessService` (own module and repository) resolves the role and maps refusals to 401 (anonymous), 404
+  (signed in, no role, or unknown id, including malformed uuids) and 403 (role too low). An anonymous visitor attempting a write
+  gets 401 (prompt to sign in), even on a public tierlist.
+- **Write pipeline** (`TierlistWriter`): `SELECT ... FOR UPDATE` on the tierlist row, permission check, change, `rev + 1`, op
+  insert, commit, then publish through the `RealtimeBroadcaster` port. A retried `clientOpId` from the same author returns the
+  original rev; from another author, 409. Deleting a tierlist is not logged (the ops go with it) but is broadcast.
+- **Title sort** uses `lower(title) COLLATE "C"` in SQL and the same comparison in TypeScript, so results do not depend on the
+  database locale (Alpine images have no ICU collation by default).
+- **Front data loading** uses Angular `resource()`; tests drive it with `settle()` (`whenStable()` would wait on open requests).
 - **Versions**: all packages share one version, bumped by `scripts/set-version.mjs` (minor per slice: slice N -> 0.N.0).
 
 ## Added dependencies
