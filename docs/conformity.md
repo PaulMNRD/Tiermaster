@@ -60,3 +60,6 @@ Updated at the end of every slice. Status: ✅ done, 🟡 partial, ⏳ todo, ⛔
 | Session expiry detected on any 401 (UI switches to anonymous) | real-time-collaboration.md (edge cases) | 9 | ✅ | `core/auth/session.interceptor.ts` |
 | Empty / loading / error states; 401, 403, 404 and "not found or private" screens | request | 4-9 | ✅ | `ui/states.ts`; `home.page.spec.ts`, `tierlist.page.spec.ts`, `join.page.spec.ts` |
 | Light and dark themes, French and English, mobile-first layout | request | 3, 9 | ✅ | `ThemeService`, `I18nService` (`i18n.service.spec.ts` checks key parity); responsive Tailwind classes (manual check) |
+| README with run instructions (devenv and standard setup), configuration, commands | request | 10 | ✅ | `README.md`; both paths run end to end (devenv up, Docker Compose + init script) |
+| Architecture as built | request | 10 | ✅ | `docs/archi/architecture.md`; C1 role names updated |
+| App starts with `devenv up` (PostgreSQL, Garage, API with migrations, front) | request | 10 | ✅ | Verified: health, fake login, upload to Garage and socket join through the dev proxy |

@@ -66,7 +66,7 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 - Rate limiting on writes and uploads; `GET /api/health`.
 - Light / dark theme, i18n (fr, en), mobile pass.
 
-### 10. Documentation — todo
+### 10. Documentation — done
 - `docs/conformity.md`, `docs/archi/architecture.md`, README (devenv and standard setup).
 
 ### 11. CI/CD — todo

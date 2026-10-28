@@ -3,7 +3,7 @@ C4Context
     title System Context diagram for TierMaster
 
     Person(visitor, "Anonymous visitor", "Browses public tierlists in read-only mode")
-    Person(user, "Authenticated user", "Creates, edits and shares tierlists. Rights depend on the tierlist: Owner, Moderator, Editor, Positioner or Reader")
+    Person(user, "Authenticated user", "Creates, edits and shares tierlists. Rights depend on the tierlist: Owner, Moderator, Editor or Viewer")
 
     System(tierapp, "TierMaster", "Collaborative real-time tierlist editor with per-tierlist access rights")
 

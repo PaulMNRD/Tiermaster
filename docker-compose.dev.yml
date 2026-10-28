@@ -1,0 +1,32 @@
+# Development services for the standard (non-Nix) setup: PostgreSQL and Garage.
+# The API and the front run on the host (see README). Development-only credentials, same as devenv.nix.
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: tiermaster
+      POSTGRES_PASSWORD: tiermaster
+      POSTGRES_DB: tiermaster
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-dev:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tiermaster"]
+      interval: 2s
+      retries: 30
+
+  garage:
+    image: dxflrs/garage:v2.1.0
+    environment:
+      GARAGE_RPC_SECRET: "0000000000000000000000000000000000000000000000000000000000000001"
+      GARAGE_ADMIN_TOKEN: dev-admin-token
+    ports:
+      - "127.0.0.1:3900:3900"
+    volumes:
+      - ./infra/garage/garage.toml:/etc/garage.toml:ro
+      - garage-dev:/var/lib/garage
+
+volumes:
+  postgres-dev:
+  garage-dev:
