@@ -159,6 +159,14 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
   to a card stay as orphans (a periodic sweep could be added later).
 - **Storage driver**: `STORAGE_DRIVER=s3|memory`, defaulting to s3 when `S3_ENDPOINT` is set; production refuses memory.
 - **Global exception filter** turns every error (including Multer's 413 and unknown routes) into `{ statusCode, code, message }`.
+- **Rate limiting** written in-house (no `@nestjs/throttler`): fixed one-minute windows in memory, per user (per IP when
+  anonymous); every mutating request counts as a write (120/min), uploads 20/min, user search 60/min, all configurable. It is a
+  global guard registered right after the session guard in `AuthModule` (global guards run in registration order).
+  In-memory state matches the single-instance deployment (ADR 0001); a Redis store would be needed with several instances.
+- **Account deletion** (`DELETE /api/me`) relies on database cascades, then evicts the rooms of owned tierlists, re-evaluates
+  the rooms where the user was a member, deletes images and the avatar, and clears the cookie. A later login with the same
+  provider identity creates a brand-new account.
+- **Front bundle budget** raised to 850 kB raw (about 166 kB transferred): Angular + zod + shared contract; pages are lazy.
 - **Connection indicator** was pulled forward from slice 9 into slice 6 (it belongs with the reconnection logic).
 - **Versions**: all packages share one version, bumped by `scripts/set-version.mjs` (minor per slice: slice N -> 0.N.0).
 
