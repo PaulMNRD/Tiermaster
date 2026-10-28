@@ -142,6 +142,16 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 - **Client store**: confirmed state + pending ops replayed on top (`applyEvent`); an op is confirmed by its own event or by its
   HTTP rev once the confirmed state reaches it (with a 1.5 s catch-up fallback); network errors retry 3 times with the same
   `clientOpId`; 404/409 trigger a resync. Category reordering uses up/down buttons (accessible on phones) rather than drag.
+- **Sharing writes go through `TierlistWriter`**: the tierlist row lock serializes them with every other write, so the target's
+  current role read inside the transaction cannot change concurrently (stronger than locking only the membership row).
+  Member changes are ops (`member.added/updated/removed`); invitation creation and revocation are not (no shared state change).
+- **Accepting an invitation that does not raise the role** commits nothing (the writer now accepts a no-op change: no rev, no event).
+- **Personal invitations** expire after 7 days; one pending per (tierlist, invitee), re-inviting replaces it. Accept or decline
+  deletes it. Links are reusable until expiry or revocation.
+- **Leave** is `POST /api/tierlists/:id/leave` (action `tierlist.leave` + explicit membership required).
+- **User search requires a signed-in user** (the doc calls it public; requiring a session limits scraping) and at least 2
+  characters; max 10 results.
+- **Members list** is readable by anyone who can read the tierlist (pseudonyms are public; emails are never returned).
 - **Connection indicator** was pulled forward from slice 9 into slice 6 (it belongs with the reconnection logic).
 - **Versions**: all packages share one version, bumped by `scripts/set-version.mjs` (minor per slice: slice N -> 0.N.0).
 
