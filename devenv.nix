@@ -27,6 +27,26 @@
     S3_SECRET_KEY = "a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718";
     S3_BUCKET = "tiermaster-images";
     PRISMA_SCHEMA_ENGINE_BINARY = "${pkgs.prisma-engines_7}/bin/schema-engine";
+    # Development-only sign-in without OAuth credentials (refused by the API in production).
+    AUTH_FAKE_ENABLED = "true";
+    PUBLIC_URL = "http://localhost:4200";
+  };
+
+  # Application processes, started by `devenv up` next to PostgreSQL and Garage.
+  processes = {
+    api.exec = ''
+      until pg_isready -q -h 127.0.0.1 -p 5432; do sleep 1; done
+      pnpm install --frozen-lockfile
+      pnpm build:shared
+      cd services/api
+      pnpm exec prisma generate
+      pnpm exec prisma migrate deploy
+      pnpm start:dev
+    '';
+    front.exec = ''
+      until [ -d services/shared/dist ]; do sleep 1; done
+      cd services/front && pnpm start
+    '';
   };
 
   # PostgreSQL: started by `devenv up`.

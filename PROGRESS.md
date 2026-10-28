@@ -18,7 +18,7 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 - Seed script creates demo users and tierlists (public, private, shared).
 - Integration test harness: real PostgreSQL through Testcontainers, one database per test file.
 
-### 3. Authentication and app shell — todo
+### 3. Authentication and app shell — done
 - `AuthProvider` port; fake provider for tests and dev; Google, Discord, Steam adapters enabled by env.
 - OAuth state verified; invalid state rejected.
 - Signed, httpOnly session cookie; `GET /api/me`; logout.
@@ -105,6 +105,18 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 - **Seed** is compiled with the API (`dist/seed/main.js`, `pnpm --filter api seed`) and is idempotent; demo users Alice, Bob,
   Carol log in with the fake provider.
 - **Health endpoint** (`GET /api/health`, DB ping, 503 when down) added in slice 2 since it only needed Prisma.
+- **Sessions** are stateless HMAC-signed tokens (no session table, no dependency): `tm_session` cookie (httpOnly, SameSite=Lax,
+  30 days), the OAuth state cookie and the 5-minute Socket.IO token share the format with distinct kinds. The user is re-read
+  from the database on every request, so a deleted account loses access immediately. Logout clears the cookie (no server-side
+  revocation list; acceptable for the MVP).
+- **OAuth without passport**: Google and Discord use a small authorization-code helper over `fetch`; Steam uses OpenID 2.0
+  (`check_authentication`). Each adapter is enabled only when its credentials are set; the fake provider only when
+  `AUTH_FAKE_ENABLED=true`, which the config refuses in production.
+- **Pseudonym gate**: `@RequireUser()` returns 403 `pseudonym_required` until a pseudonym is chosen; `/api/me` stays usable.
+- **Error body** is always `{ statusCode, code, message }` (`ApiErrorSchema`); the front maps `code` to i18n messages.
+- **Front i18n** is a runtime dictionary service (`t` pipe), not `@angular/localize`: one build, instant switch; French must
+  define every English key (type-checked and tested).
+- **Front imports `@tiermaster/shared` from source** (tsconfig path), so it never uses a stale build.
 - **Versions**: all packages share one version, bumped by `scripts/set-version.mjs` (minor per slice: slice N -> 0.N.0).
 
 ## Added dependencies
@@ -114,6 +126,9 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 | `@prisma/adapter-pg`, `pg`, `@types/pg` | api | 2 | Prisma 7 needs a driver adapter; `pg` is also used by the test harness to clone databases |
 | `testcontainers`, `@testcontainers/postgresql` | api (dev) | 2 | Integration tests on a real PostgreSQL (AGENTS.md) |
 | removed `vite-tsconfig-paths` | api (dev) | 2 | Vite now resolves tsconfig paths natively |
+| `tailwindcss`, `@tailwindcss/postcss`, `postcss` | front (dev) | 3 | Design system (stack) |
+| `zod` | front | 3 | Validates API responses with the shared schemas (needed since the front compiles shared from source) |
 
 ## Open questions / needs your input
-_None yet._
+- OAuth client credentials for Google and Discord, and a Steam Web API key (production). Until then only the fake provider works
+  (development). Callback URLs to register: `{PUBLIC_URL}/api/auth/google/callback`, `{PUBLIC_URL}/api/auth/discord/callback`.
