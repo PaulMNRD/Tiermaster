@@ -53,7 +53,7 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 - Accepting never lowers a role; pending invitations notified on the home page.
 - Live revocation and role downgrade on connected sockets (member removed, role changed, defaultRole changed, tierlist deleted).
 
-### 8. Images — todo
+### 8. Images — done
 - Upload `POST /api/tierlists/:id/media`: EDITOR+, magic bytes check, size limit, re-encoded with sharp.
 - Stored through the `ObjectStorage` port (S3 adapter for Garage, in-memory adapter for tests).
 - `GET /api/media/*` checks read access, private cache headers; revoked users get 404.

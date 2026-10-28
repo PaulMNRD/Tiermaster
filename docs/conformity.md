@@ -49,3 +49,9 @@ Updated at the end of every slice. Status: ✅ done, 🟡 partial, ⏳ todo, ⛔
 | Invitation management visibility (owner all, moderator own or assignable); creator demoted -> invitations revoked | sharing-and-invitations.md | 7 | ✅ | `invitations.spec.ts` (management), `members.spec.ts` |
 | User search by pseudonym only, capped, `excludeMembersOf` restricted | sharing-and-invitations.md | 7 | ✅ | `api/test/sharing/user-search.spec.ts` |
 | Settings page (rename, visibility, members, invitations, leave, delete) by role; join page | request | 7 | ✅ | front `settings.page.spec.ts`, `join.page.spec.ts` |
+| Upload: EDITOR+, real type by magic bytes, 5 MB limit, decompression-bomb limit, re-encoded to WebP (metadata stripped) | image-handling.md, ADR 0003 | 8 | ✅ | `api/test/media/media.spec.ts`, `api/src/modules/media/image-processing.spec.ts` |
+| Private bucket through the `ObjectStorage` port (S3 adapter for Garage, in-memory for tests) | ADR 0008, AGENTS.md rule 6 | 8 | 🟡 | `adapters/storage/*`; in-memory adapter tested, S3 adapter checked against Garage in slice 10 |
+| Images served through the API with the tierlist read check, private cache, revocation immediate | image-handling.md, ADR 0003 | 8 | ✅ | `media.spec.ts` (`rejected`, revoked mid-session) |
+| Storage cleanup: replaced or deleted card images, deleted tierlists | ADR 0003 | 8 | ✅ | `media.spec.ts` |
+| Client-side resize before upload; card image UI; avatars | image-handling.md, request | 8 | ✅ | front `image-resize.spec.ts`, `card-editor.ts`; avatar API in `media.spec.ts` |
+| Uniform error body for framework errors (413, 404 routes, 500) | — | 8 | ✅ | `common/api-exception.filter.ts` (exercised by `media.spec.ts`) |

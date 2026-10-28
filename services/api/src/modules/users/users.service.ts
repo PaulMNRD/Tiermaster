@@ -43,6 +43,15 @@ export class UsersService {
     return rows.flatMap((row) => (row.name ? [toPublicUser({ ...row, name: row.name })] : []));
   }
 
+  /** Returns the previous avatar key (the caller deletes the object). */
+  setAvatarKey(id: string, key: string | null): Promise<string | null> {
+    return this.users.setAvatarKey(id, key);
+  }
+
+  async avatarKey(id: string): Promise<string | null> {
+    return (await this.users.findById(id))?.avatarKey ?? null;
+  }
+
   async getMe(id: string): Promise<Me> {
     const user = await this.users.findById(id);
     if (!user) throw unauthorized();

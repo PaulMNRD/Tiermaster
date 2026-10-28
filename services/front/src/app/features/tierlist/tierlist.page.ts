@@ -7,7 +7,10 @@ import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { ConnectionIndicator } from '../../ui/connection-indicator';
 import { RoleBadge } from '../../ui/role-badge';
 import { ErrorState, LoadingState } from '../../ui/states';
-import { CardEditor, type CardEdit } from './card-editor';
+import { MediaApi } from '../../core/api/media.api';
+import { toApiFailure } from '../../core/api/api-error';
+import { ImagePicker } from '../../ui/image-picker';
+import { CardEditor, type CardEdit, uploadError } from './card-editor';
 import { CardTile } from './card-tile';
 import { CategoryEditor } from './category-editor';
 import { TierlistStore } from './tierlist.store';
@@ -105,6 +108,7 @@ const POOL = 'pool';
                          [value]="newCard()" (input)="newCard.set($any($event.target).value)" maxlength="80" />
                   <button class="btn-primary min-h-9 shrink-0 py-1" type="submit" [disabled]="!newCard().trim()">{{ 'card.add' | t }}</button>
                 </form>
+                <tm-image-picker label="card.addWithImage" [busy]="uploading()" (picked)="addImageCard($event)" />
               }
             </div>
             <ul class="flex min-h-20 flex-wrap content-start gap-1.5" [attr.aria-label]="'tierlist.unsorted' | t"
@@ -122,7 +126,7 @@ const POOL = 'pool';
         </section>
 
         @if (editedCard(); as card) {
-          <tm-card-editor [card]="card" (saved)="saveCard(card.id, $event)" (remove)="removeCard(card.id)" (closed)="editCardId.set(null)" />
+          <tm-card-editor [card]="card" [tierlistId]="id()" (saved)="saveCard(card.id, $event)" (remove)="removeCard(card.id)" (closed)="editCardId.set(null)" />
         }
         @if (editCategory(); as edit) {
           @if (categoryById(edit.id); as category) {
@@ -146,6 +150,7 @@ const POOL = 'pool';
     RoleBadge,
     CardTile,
     CardEditor,
+    ImagePicker,
     CategoryEditor,
     ConnectionIndicator,
     RouterLink,
@@ -169,6 +174,8 @@ export default class TierlistPage {
   protected readonly editCardId = signal<string | null>(null);
   protected readonly editCategory = signal<{ id: string; first: boolean; last: boolean } | null>(null);
   protected readonly addingCategory = signal(false);
+  protected readonly uploading = signal(false);
+  private readonly media = inject(MediaApi);
 
   protected readonly editedCard = computed(() => {
     const id = this.editCardId();
@@ -209,8 +216,22 @@ export default class TierlistPage {
     this.newCard.set('');
   }
 
+  /** Uploads a picture and creates a card titled after the file name. */
+  protected async addImageCard(file: File): Promise<void> {
+    this.uploading.set(true);
+    try {
+      const imageKey = await this.media.uploadCardImage(this.id(), file);
+      const title = file.name.replace(/\.[^.]+$/, '').trim().slice(0, 80) || 'Image';
+      await this.store.createCard(title, null, imageKey);
+    } catch (error) {
+      this.store.notice.set(uploadError(toApiFailure(error).status));
+    } finally {
+      this.uploading.set(false);
+    }
+  }
+
   protected saveCard(cardId: string, edit: CardEdit): void {
-    void this.store.updateCard(cardId, edit);
+    if (edit.title !== undefined || edit.imageKey !== undefined) void this.store.updateCard(cardId, edit);
     this.editCardId.set(null);
   }
 

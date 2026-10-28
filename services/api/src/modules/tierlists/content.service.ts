@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
 import {
   type Card,
   type Category,
@@ -18,6 +18,7 @@ import {
 import type { Tx } from '../../adapters/prisma/transaction.runner.js';
 import type { AuthUser } from '../../common/auth.js';
 import { apiError, conflict, notFound } from '../../common/errors.js';
+import { OBJECT_STORAGE, type ObjectStorage } from '../../ports/object-storage.port.js';
 import { AccessService } from '../access/access.service.js';
 import { ContentRepository } from './content.repository.js';
 import { OpsRepository } from './ops.repository.js';
@@ -30,7 +31,10 @@ export const MAX_OPS_GAP = 500;
 
 @Injectable()
 export class ContentService {
+  private readonly logger = new Logger(ContentService.name);
+
   constructor(
+    @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
     private readonly content: ContentRepository,
     private readonly ops: OpsRepository,
     private readonly writer: TierlistWriter,
@@ -165,17 +169,21 @@ export class ContentService {
 
   async updateCard(user: AuthUser, tierlistId: string, id: string, body: UpdateCard): Promise<{ rev: number }> {
     this.checkImageKey(tierlistId, body.imageKey);
-    return this.writer.write({
+    let replaced: string | null = null;
+    const result = await this.writer.write({
       user,
       tierlistId,
       clientOpId: body.clientOpId,
       authorize: 'card.write',
       apply: async (tx) => {
-        await this.requireCard(tx, tierlistId, id);
+        const previous = (await this.requireCard(tx, tierlistId, id)).imageKey;
+        if (body.imageKey !== undefined && previous !== body.imageKey) replaced = previous;
         const card = await this.content.updateCard(tx, id, { title: body.title, imageKey: body.imageKey });
         return { type: 'card.updated', payload: { card } };
       },
     });
+    this.discardImage(replaced);
+    return result;
   }
 
   async moveCard(user: AuthUser, tierlistId: string, id: string, body: MoveCard): Promise<{ rev: number }> {
@@ -195,7 +203,6 @@ export class ContentService {
     });
   }
 
-  /** Returns the deleted card (the media module uses its image key to clean up storage). */
   async deleteCard(user: AuthUser, tierlistId: string, id: string, clientOpId?: string): Promise<{ rev: number; imageKey: string | null }> {
     let imageKey: string | null = null;
     const { rev } = await this.writer.write({
@@ -209,10 +216,17 @@ export class ContentService {
         return { type: 'card.deleted', payload: { cardId: id } };
       },
     });
+    this.discardImage(imageKey);
     return { rev, imageKey };
   }
 
   // ---- helpers ----
+
+  /** Best effort, after the commit: a failed deletion leaves an orphan object, never an inconsistent card. */
+  private discardImage(key: string | null): void {
+    if (!key) return;
+    this.storage.delete(key).catch((error: unknown) => this.logger.warn(`Could not delete ${key}: ${String(error)}`));
+  }
 
   private checkImageKey(tierlistId: string, imageKey: string | null | undefined): void {
     if (imageKey && !imageKey.startsWith(`tierlists/${tierlistId}/`)) throw apiError(HttpStatus.BAD_REQUEST, 'image_key_invalid');

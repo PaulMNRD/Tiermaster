@@ -1,0 +1,8 @@
+import { Module } from '@nestjs/common';
+import { AccessModule } from '../access/access.module.js';
+import { UsersModule } from '../users/users.module.js';
+import { MediaController } from './media.controller.js';
+import { MediaService } from './media.service.js';
+
+@Module({ imports: [AccessModule, UsersModule], controllers: [MediaController], providers: [MediaService] })
+export class MediaModule {}

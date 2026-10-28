@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   can,
   type CommunityQuery,
@@ -13,6 +13,7 @@ import {
 } from '@tiermaster/shared';
 import { TransactionRunner } from '../../adapters/prisma/transaction.runner.js';
 import type { AuthUser } from '../../common/auth.js';
+import { OBJECT_STORAGE, type ObjectStorage } from '../../ports/object-storage.port.js';
 import { REALTIME_BROADCASTER, type RealtimeBroadcaster } from '../../ports/realtime-broadcaster.port.js';
 import { AccessService } from '../access/access.service.js';
 import { TierlistWriter } from './tierlist-writer.service.js';
@@ -42,7 +43,10 @@ const ROW_ORDER: Record<TierlistSort, (a: SummaryRow, b: SummaryRow) => number> 
 
 @Injectable()
 export class TierlistsService {
+  private readonly logger = new Logger(TierlistsService.name);
+
   constructor(
+    @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
     private readonly tierlists: TierlistsRepository,
     private readonly writer: TierlistWriter,
     private readonly access: AccessService,
@@ -101,5 +105,6 @@ export class TierlistsService {
       await this.tierlists.delete(tx, id);
     });
     this.broadcaster.publish({ kind: 'tierlist.deleted', tierlistId: id });
+    this.storage.deletePrefix(`tierlists/${id}/`).catch((error: unknown) => this.logger.warn(`Could not delete images of ${id}: ${String(error)}`));
   }
 }

@@ -147,6 +147,12 @@ export const en = {
   'error.already_has_access': 'This person already has this access or more.',
   'error.user_not_found': 'User not found.',
   'error.member_not_found': 'This person is no longer a member.',
+  'image.choose': 'Choose an image',
+  'image.remove': 'Remove image',
+  'image.uploading': 'Uploading…',
+  'image.tooLarge': 'This image is too large (5 MB max).',
+  'image.unsupported': 'Unsupported or damaged image (PNG, JPEG, WebP or GIF).',
+  'card.addWithImage': '📷 Add from an image',
 } as const;
 
 export type MessageKey = keyof typeof en;

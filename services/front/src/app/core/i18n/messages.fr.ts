@@ -148,4 +148,10 @@ export const fr: Record<MessageKey, string> = {
   'error.already_has_access': 'Cette personne a déjà cet accès ou plus.',
   'error.user_not_found': 'Utilisateur introuvable.',
   'error.member_not_found': "Cette personne n'est plus membre.",
+  'image.choose': 'Choisir une image',
+  'image.remove': "Retirer l'image",
+  'image.uploading': 'Envoi…',
+  'image.tooLarge': 'Cette image est trop lourde (5 Mo max).',
+  'image.unsupported': 'Image non prise en charge ou endommagée (PNG, JPEG, WebP ou GIF).',
+  'card.addWithImage': '📷 Ajouter depuis une image',
 };

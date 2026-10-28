@@ -42,6 +42,15 @@ export class UsersRepository {
     }
   }
 
+  /** Sets the uploaded avatar and returns the previous key. */
+  async setAvatarKey(id: string, avatarKey: string | null): Promise<string | null> {
+    return this.prisma.$transaction(async (tx) => {
+      const previous = await tx.user.findUnique({ where: { id }, select: { avatarKey: true } });
+      await tx.user.update({ where: { id }, data: { avatarKey } });
+      return previous?.avatarKey ?? null;
+    });
+  }
+
   /** Pseudonym search (partial, case-insensitive). Email is never searched. */
   search(q: string, excludeMembersOf?: string) {
     return this.prisma.user.findMany({
