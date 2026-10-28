@@ -10,16 +10,18 @@ import { ThemeService } from './core/theme/theme.service';
   template: `
     <div class="flex min-h-dvh flex-col">
       <header class="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
-        <nav class="mx-auto flex h-14 max-w-6xl items-center gap-2 px-3 sm:px-4">
+        <nav class="mx-auto flex h-14 max-w-6xl items-center gap-1 px-2 sm:gap-2 sm:px-4">
           <a routerLink="/" class="mr-2 flex items-center gap-2 font-black tracking-tight">
             <span class="grid size-8 place-items-center rounded-lg bg-brand-600 text-sm text-white">TM</span>
             <span class="hidden sm:inline">{{ 'app.name' | t }}</span>
           </a>
           @if (auth.isSignedIn()) {
             <a routerLink="/" routerLinkActive="bg-slate-200 dark:bg-slate-800" [routerLinkActiveOptions]="{ exact: true }"
-               class="btn-ghost px-3">{{ 'nav.home' | t }}</a>
+               class="btn-ghost px-2 sm:px-3"><span class="sm:hidden" aria-hidden="true">🏠</span><span class="sr-only sm:not-sr-only">{{ 'nav.home' | t }}</span></a>
           }
-          <a routerLink="/community" routerLinkActive="bg-slate-200 dark:bg-slate-800" class="btn-ghost px-3">{{ 'nav.community' | t }}</a>
+          <a routerLink="/community" routerLinkActive="bg-slate-200 dark:bg-slate-800" class="btn-ghost px-2 sm:px-3">
+            <span class="sm:hidden" aria-hidden="true">🌍</span><span class="sr-only sm:not-sr-only">{{ 'nav.community' | t }}</span>
+          </a>
           <span class="flex-1"></span>
           <select class="input w-auto min-h-9 py-1" [attr.aria-label]="'lang.switch' | t"
                   [value]="i18n.lang()" (change)="setLang($any($event.target).value)">

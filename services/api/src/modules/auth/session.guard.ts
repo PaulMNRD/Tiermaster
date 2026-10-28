@@ -3,10 +3,9 @@ import { Reflector } from '@nestjs/core';
 import { AUTH_REQUIREMENT, type AuthenticatedRequest, type AuthRequirement } from '../../common/auth.js';
 import { readCookie } from '../../common/cookies.js';
 import { forbidden, unauthorized } from '../../common/errors.js';
+import { SESSION_COOKIE } from '../../common/session-cookie.js';
 import { UsersService } from '../users/users.service.js';
 import { SessionService } from './session.service.js';
-
-export const SESSION_COOKIE = 'tm_session';
 
 /** Global guard: attaches the session user (or null) to every HTTP request, then applies @RequireUser. */
 @Injectable()

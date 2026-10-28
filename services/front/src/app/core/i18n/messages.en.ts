@@ -153,6 +153,12 @@ export const en = {
   'image.tooLarge': 'This image is too large (5 MB max).',
   'image.unsupported': 'Unsupported or damaged image (PNG, JPEG, WebP or GIF).',
   'card.addWithImage': '📷 Add from an image',
+  'profile.changeAvatar': 'Change avatar',
+  'profile.email': 'Signed in with {email} (never shown to others).',
+  'profile.deleteTitle': 'Delete my account',
+  'profile.deleteHelp': 'Your tierlists are deleted for everyone and you leave every shared tierlist. This cannot be undone.',
+  'profile.deleteConfirm': 'Type your pseudonym ({name}) to confirm',
+  'profile.delete': 'Delete my account',
 } as const;
 
 export type MessageKey = keyof typeof en;

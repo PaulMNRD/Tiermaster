@@ -154,4 +154,10 @@ export const fr: Record<MessageKey, string> = {
   'image.tooLarge': 'Cette image est trop lourde (5 Mo max).',
   'image.unsupported': 'Image non prise en charge ou endommagée (PNG, JPEG, WebP ou GIF).',
   'card.addWithImage': '📷 Ajouter depuis une image',
+  'profile.changeAvatar': "Changer d'avatar",
+  'profile.email': 'Connecté avec {email} (jamais visible par les autres).',
+  'profile.deleteTitle': 'Supprimer mon compte',
+  'profile.deleteHelp': 'Vos tierlists sont supprimées pour tout le monde et vous quittez toutes les tierlists partagées. Action irréversible.',
+  'profile.deleteConfirm': 'Tapez votre pseudonyme ({name}) pour confirmer',
+  'profile.delete': 'Supprimer mon compte',
 };

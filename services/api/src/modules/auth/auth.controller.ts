@@ -3,9 +3,9 @@ import type { AuthProvidersResponse, SocketTokenResponse } from '@tiermaster/sha
 import type { CookieOptions, Request, Response } from 'express';
 import { type AuthUser, CurrentUser, RequireUser } from '../../common/auth.js';
 import { readCookie } from '../../common/cookies.js';
+import { cookieOptions, SESSION_COOKIE } from '../../common/session-cookie.js';
 import { APP_CONFIG, type AppConfig } from '../../config/app-config.js';
 import { AuthService, OAUTH_STATE_TTL_SECONDS, SESSION_TTL_SECONDS } from './auth.service.js';
-import { SESSION_COOKIE } from './session.guard.js';
 
 const OAUTH_COOKIE = 'tm_oauth';
 
@@ -59,6 +59,6 @@ export class AuthController {
   }
 
   private cookieOptions(): CookieOptions {
-    return { httpOnly: true, sameSite: 'lax', secure: this.config.COOKIE_SECURE, path: '/' };
+    return cookieOptions(this.config);
   }
 }

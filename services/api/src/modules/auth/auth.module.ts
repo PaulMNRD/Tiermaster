@@ -4,6 +4,7 @@ import { DiscordAuthProvider } from '../../adapters/auth/discord-auth.provider.j
 import { FakeAuthProvider } from '../../adapters/auth/fake-auth.provider.js';
 import { GoogleAuthProvider } from '../../adapters/auth/google-auth.provider.js';
 import { SteamAuthProvider } from '../../adapters/auth/steam-auth.provider.js';
+import { RateLimitGuard } from '../../common/rate-limit.js';
 import { APP_CONFIG, type AppConfig } from '../../config/app-config.js';
 import { AUTH_PROVIDERS, type AuthProvider } from '../../ports/auth-provider.port.js';
 import { UsersModule } from '../users/users.module.js';
@@ -33,7 +34,9 @@ function authProviders(config: AppConfig): AuthProvider[] {
     AuthService,
     SessionService,
     { provide: AUTH_PROVIDERS, useFactory: authProviders, inject: [APP_CONFIG] },
+    // Global guards run in this order: the rate limiter needs the user attached by the session guard.
     { provide: APP_GUARD, useClass: SessionGuard },
+    { provide: APP_GUARD, useClass: RateLimitGuard },
   ],
   exports: [SessionService],
 })

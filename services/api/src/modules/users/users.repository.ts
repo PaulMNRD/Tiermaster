@@ -51,6 +51,19 @@ export class UsersRepository {
     });
   }
 
+  /** Deletes the user; the database cascades to accounts, owned tierlists, memberships and invitations. */
+  async deleteWithLinks(id: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id },
+        select: { avatarKey: true, ownedTierlists: { select: { id: true } }, memberships: { select: { tierlistId: true } } },
+      });
+      if (!user) return null;
+      await tx.user.delete({ where: { id } });
+      return { avatarKey: user.avatarKey, owned: user.ownedTierlists.map((t) => t.id), memberOf: user.memberships.map((m) => m.tierlistId) };
+    });
+  }
+
   /** Pseudonym search (partial, case-insensitive). Email is never searched. */
   search(q: string, excludeMembersOf?: string) {
     return this.prisma.user.findMany({

@@ -59,7 +59,7 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 - `GET /api/media/*` checks read access, private cache headers; revoked users get 404.
 - Front: client-side resize before upload; card images displayed.
 
-### 9. Polish — todo
+### 9. Polish — done
 - Settings page (rename, default role, delete, leave), profile page (pseudonym, avatar, delete account).
 - Empty / loading / error states; 401, 403, 404 and "not found or private" screens.
 - Connection status indicator with reconnection and full resync.

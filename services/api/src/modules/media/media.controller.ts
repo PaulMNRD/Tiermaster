@@ -14,6 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { type AuthUser, CurrentUser, RequireUser } from '../../common/auth.js';
 import { apiError, notFound } from '../../common/errors.js';
+import { RateLimit } from '../../common/rate-limit.js';
 import { UuidPipe } from '../../common/uuid.pipe.js';
 import type { StoredObject } from '../../ports/object-storage.port.js';
 import { MAX_UPLOAD_BYTES } from './image-processing.js';
@@ -53,6 +54,7 @@ export class MediaController {
 
   @Post('tierlists/:id/media')
   @RequireUser()
+  @RateLimit('upload')
   @UseInterceptors(upload())
   uploadCardImage(
     @CurrentUser() user: AuthUser,
@@ -75,6 +77,7 @@ export class MediaController {
 
   @Post('me/avatar')
   @RequireUser()
+  @RateLimit('upload')
   @UseInterceptors(upload())
   async uploadAvatar(@CurrentUser() user: AuthUser, @UploadedFile() file: UploadedImage | undefined): Promise<void> {
     await this.media.uploadAvatar(user, requireFile(file));

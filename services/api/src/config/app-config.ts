@@ -31,6 +31,10 @@ export const AppConfigSchema = z
     S3_SECRET_KEY: z.string().optional(),
     S3_BUCKET: z.string().default('tiermaster-images'),
     S3_FORCE_PATH_STYLE: booleanString,
+    /** Per user (or per IP when anonymous), fixed one-minute windows. */
+    RATE_LIMIT_WRITES_PER_MINUTE: z.coerce.number().int().positive().default(120),
+    RATE_LIMIT_UPLOADS_PER_MINUTE: z.coerce.number().int().positive().default(20),
+    RATE_LIMIT_SEARCHES_PER_MINUTE: z.coerce.number().int().positive().default(60),
   })
   .transform((config) => ({ ...config, STORAGE_DRIVER: config.STORAGE_DRIVER ?? (config.S3_ENDPOINT ? 's3' : 'memory') }))
   .superRefine((config, ctx) => {

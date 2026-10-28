@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { Me, PublicUser, UserSearchQuery } from '@tiermaster/shared';
 import type { AuthUser } from '../../common/auth.js';
 import { conflict, notFound, unauthorized } from '../../common/errors.js';
+import { OBJECT_STORAGE, type ObjectStorage } from '../../ports/object-storage.port.js';
+import { REALTIME_BROADCASTER, type RealtimeBroadcaster } from '../../ports/realtime-broadcaster.port.js';
 import { AccessService } from '../access/access.service.js';
 import type { User } from '../../generated/prisma/client.js';
 import type { OAuthProfile } from '../../ports/auth-provider.port.js';
@@ -9,9 +11,13 @@ import { UsersRepository } from './users.repository.js';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     private readonly users: UsersRepository,
     private readonly access: AccessService,
+    @Inject(REALTIME_BROADCASTER) private readonly broadcaster: RealtimeBroadcaster,
+    @Inject(OBJECT_STORAGE) private readonly storage: ObjectStorage,
   ) {}
 
   findById(id: string) {
@@ -50,6 +56,24 @@ export class UsersService {
 
   async avatarKey(id: string): Promise<string | null> {
     return (await this.users.findById(id))?.avatarKey ?? null;
+  }
+
+  /** Account deletion: owned tierlists disappear for everyone (rooms evicted, images deleted). */
+  async deleteAccount(user: AuthUser): Promise<void> {
+    const deleted = await this.users.deleteWithLinks(user.id);
+    if (!deleted) throw unauthorized();
+    for (const tierlistId of deleted.owned) {
+      this.broadcaster.publish({ kind: 'tierlist.deleted', tierlistId });
+      this.cleanup(`tierlists/${tierlistId}/`, true);
+    }
+    for (const tierlistId of deleted.memberOf) this.broadcaster.publish({ kind: 'access.changed', tierlistId, userIds: [user.id] });
+    if (deleted.avatarKey) this.cleanup(deleted.avatarKey, false);
+  }
+
+  private cleanup(key: string, prefix: boolean): void {
+    (prefix ? this.storage.deletePrefix(key) : this.storage.delete(key)).catch((error: unknown) =>
+      this.logger.warn(`Could not delete ${key}: ${String(error)}`),
+    );
   }
 
   async getMe(id: string): Promise<Me> {

@@ -55,3 +55,8 @@ Updated at the end of every slice. Status: ✅ done, 🟡 partial, ⏳ todo, ⛔
 | Storage cleanup: replaced or deleted card images, deleted tierlists | ADR 0003 | 8 | ✅ | `media.spec.ts` |
 | Client-side resize before upload; card image UI; avatars | image-handling.md, request | 8 | ✅ | front `image-resize.spec.ts`, `card-editor.ts`; avatar API in `media.spec.ts` |
 | Uniform error body for framework errors (413, 404 routes, 500) | — | 8 | ✅ | `common/api-exception.filter.ts` (exercised by `media.spec.ts`) |
+| Profile: pseudonym, avatar, delete account (owned tierlists deleted and evicted live, session invalid) | request | 9 | ✅ | `api/test/users/account.spec.ts`; front `profile.page.spec.ts` |
+| Rate limiting on writes, uploads and search (429 + Retry-After, per user or IP) | request | 9 | ✅ | `api/test/common/rate-limit.spec.ts` |
+| Session expiry detected on any 401 (UI switches to anonymous) | real-time-collaboration.md (edge cases) | 9 | ✅ | `core/auth/session.interceptor.ts` |
+| Empty / loading / error states; 401, 403, 404 and "not found or private" screens | request | 4-9 | ✅ | `ui/states.ts`; `home.page.spec.ts`, `tierlist.page.spec.ts`, `join.page.spec.ts` |
+| Light and dark themes, French and English, mobile-first layout | request | 3, 9 | ✅ | `ThemeService`, `I18nService` (`i18n.service.spec.ts` checks key parity); responsive Tailwind classes (manual check) |
