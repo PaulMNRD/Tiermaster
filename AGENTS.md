@@ -24,7 +24,7 @@ TierMaster is a collaborative real-time tierlist editor ("Google Docs for tierli
 - `docs/features/`: detailed behaviour (UML and notes). Read the files about the feature at hand.
 - `docs/mcd.md`: data model, the source of truth for the database, keep it updated when changes are required.
 - `docs/adr/`: past decisions. Check them before changing a structural choice. Read the files about the feature at hand.
-- `docs/conformity.md`: requirement-to-slice tracking, updated at the end of every slice. If two documents disagree, stop and report it instead of choosing one.
+- `docs/conformity.md`: requirement-to-slice tracking, updated at the end of every slice.
 ## Testing strategy
 - **Unit:** exhaustive permission matrix (`effectiveRole`, `can`, `canGrant`), business rules: e.g. tierlist operations, fractional indexing.
 - **Integration:** API + real PostgreSQL (Testcontainers), fake `AuthProvider`, WebSocket scenarios with several clients (permission rejection, revocation, broadcast).
