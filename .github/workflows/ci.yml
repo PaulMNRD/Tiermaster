@@ -1,0 +1,95 @@
+# CI/CD (ADR 0005): build and test every push and pull request inside the devenv shell;
+# on main, publish the images to GHCR and deploy them to the VPS with Docker Compose.
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v16
+        with:
+          name: devenv
+      - name: Install devenv
+        run: nix profile install nixpkgs#devenv
+      - name: Install dependencies
+        run: devenv shell -- pnpm install --frozen-lockfile
+      - name: Build
+        run: devenv shell -- pnpm build
+      # API integration tests start PostgreSQL with Testcontainers (Docker is available on GitHub runners).
+      - name: Test
+        run: devenv shell -- pnpm test
+
+  images:
+    name: Publish images
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        image: [api, web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Image name
+        id: name
+        run: echo "value=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/tiermaster-${{ matrix.image }}" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/${{ matrix.image }}.Dockerfile
+          push: true
+          tags: |
+            ${{ steps.name.outputs.value }}:${{ github.sha }}
+            ${{ steps.name.outputs.value }}:latest
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+
+  deploy:
+    name: Deploy to the VPS
+    needs: images
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      TARGET: ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/opt/tiermaster' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+      - name: Trust the VPS host key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+      - name: Upload deployment files
+        run: |
+          ssh "$TARGET" "mkdir -p $DEPLOY_PATH/garage $DEPLOY_PATH/infra/garage"
+          scp infra/docker-compose.prod.yml infra/deploy.sh "$TARGET:$DEPLOY_PATH/"
+          scp infra/garage/garage.toml "$TARGET:$DEPLOY_PATH/garage/"
+          scp infra/garage/init.sh "$TARGET:$DEPLOY_PATH/infra/garage/"
+      - name: Deploy
+        run: ssh "$TARGET" "$DEPLOY_PATH/deploy.sh ${{ github.sha }}"

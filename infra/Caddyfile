@@ -1,0 +1,27 @@
+# DOMAIN comes from the environment (e.g. tiermaster.example.com); Caddy obtains the TLS certificate automatically.
+{$DOMAIN:localhost} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		X-Frame-Options DENY
+		-Server
+	}
+
+	# API and real-time gateway (WebSocket upgrade is handled by reverse_proxy).
+	@backend path /api/* /ws /ws/*
+	handle @backend {
+		reverse_proxy api:3000
+	}
+
+	# Single-page app: hashed assets are immutable, everything else falls back to index.html.
+	handle {
+		root * /srv
+		@assets path_regexp -[0-9A-Za-z_]{8}\.(js|css)$
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		try_files {path} /index.html
+		file_server
+	}
+}

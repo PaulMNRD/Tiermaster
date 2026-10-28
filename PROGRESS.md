@@ -69,8 +69,10 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 ### 10. Documentation — done
 - `docs/conformity.md`, `docs/archi/architecture.md`, README (devenv and standard setup).
 
-### 11. CI/CD — todo
-- GitHub Actions: build and test on push / PR; on `main`, build images and deploy to the VPS with Docker Compose and Caddy.
+### 11. CI/CD — done
+- GitHub Actions: build and test on push / PR inside the devenv shell; on `main`, build images (GHCR) and deploy to the VPS with
+  Docker Compose and Caddy.
+- Dockerfiles for the API and the web (Caddy + SPA) images; production Compose file; VPS deploy script; infra README.
 
 ## Document conflicts (most recent document applied)
 1. **Role names.** The initial scaffold (`shared/src/types`) used `READ/POSITION/EDIT/MODERATE` and C1 mentions "Positioner/Reader",
@@ -168,6 +170,11 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
   provider identity creates a brand-new account.
 - **Front bundle budget** raised to 850 kB raw (about 166 kB transferred): Angular + zod + shared contract; pages are lazy.
 - **Connection indicator** was pulled forward from slice 9 into slice 6 (it belongs with the reconnection logic).
+- **Images and deployment**: the API image is built with `pnpm deploy --prod` (`files` fields added to `api` and `shared`);
+  `prisma` moved to runtime dependencies so the container applies migrations at start-up (`prisma migrate deploy`, then
+  `node dist/main.js`). The web image is Caddy with the SPA baked in; it terminates TLS and proxies `/api` and `/ws`. Garage is
+  initialized idempotently by `infra/garage/init.sh` on every deploy. Images are tagged with the commit SHA and `latest`.
+- **Standard (non-Nix) dev setup**: `docker-compose.dev.yml` (PostgreSQL + Garage) with the same credentials as devenv.nix.
 - **Versions**: all packages share one version, bumped by `scripts/set-version.mjs` (minor per slice: slice N -> 0.N.0).
 
 ## Added dependencies
@@ -184,8 +191,31 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 | `@angular/cdk` | front | 6 | Touch-friendly drag and drop |
 | `sharp` | api | 8 | Server-side re-encoding of uploads (ADR 0003) |
 | `@aws-sdk/client-s3` | api | 8 | Plain S3 API to Garage (AGENTS.md rule 6) |
+| moved `prisma` to dependencies | api | 11 | The production image runs `prisma migrate deploy` at start-up |
 | bumped `@nestjs/common`, `core`, `platform-express`, `testing` to 12.3 | api | 6 | Must match `@nestjs/websockets` 12.3 |
 
 ## Open questions / needs your input
+- **Production deployment inputs**: a VPS with Docker, a domain, the `.env` secrets and the GitHub secrets listed in
+  `infra/README.md` (`VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS`). The workflow has not run on GitHub yet.
 - OAuth client credentials for Google and Discord, and a Steam Web API key (production). Until then only the fake provider works
   (development). Callback URLs to register: `{PUBLIC_URL}/api/auth/google/callback`, `{PUBLIC_URL}/api/auth/discord/callback`.
+
+## Final report
+
+**Works (verified by tests and by running it):**
+- `pnpm build` and `pnpm test` pass: 226 shared unit tests (permission matrix, ordering, reducer), 135 API integration tests on a
+  real PostgreSQL (Testcontainers) including multi-client Socket.IO scenarios, hostile uploads, rejected and revoked-mid-session
+  cases, and 45 front tests (store, pages per role, guards, i18n parity).
+- `devenv up` starts PostgreSQL, Garage, the API (migrations applied) and the SPA; checked fake login, image upload to Garage
+  and room joins through the dev proxy. The Docker-based standard setup was checked the same way.
+- The production images build and the production Compose stack runs locally (HTTPS via Caddy, SPA deep links, API, WebSocket,
+  migrations at start-up, fake login refused).
+
+**Not verified / limitations:**
+- The UI was not exercised in a real browser (no E2E by design): drag-and-drop gestures, phone layout and dark mode were
+  checked through component tests and builds only. A manual pass on a phone is recommended.
+- The Google, Discord and Steam adapters follow the documented provider flows but are untested without credentials.
+- The GitHub Actions workflow is syntactically valid but has not run on GitHub.
+- Rate limiting and the real-time broadcaster are in memory (single API instance, as in ADR 0001).
+- Uploaded images that are never attached to a card are not swept.
+- Ownership transfer is not implemented (out of scope in roles-and-permissions.md).

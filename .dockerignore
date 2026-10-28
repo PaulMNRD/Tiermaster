@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+**/.angular
+**/coverage
+.devenv*
+.direnv
+.git
+**/src/generated
+*.log
+.env

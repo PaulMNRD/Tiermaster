@@ -63,3 +63,6 @@ Updated at the end of every slice. Status: ✅ done, 🟡 partial, ⏳ todo, ⛔
 | README with run instructions (devenv and standard setup), configuration, commands | request | 10 | ✅ | `README.md`; both paths run end to end (devenv up, Docker Compose + init script) |
 | Architecture as built | request | 10 | ✅ | `docs/archi/architecture.md`; C1 role names updated |
 | App starts with `devenv up` (PostgreSQL, Garage, API with migrations, front) | request | 10 | ✅ | Verified: health, fake login, upload to Garage and socket join through the dev proxy |
+| CI: build and test on every push and PR inside the devenv shell | ADR 0005 | 11 | 🟡 | `.github/workflows/ci.yml` (valid; not yet run on GitHub) |
+| CD: images to GHCR, deploy to the VPS with Docker Compose, `restart: unless-stopped`, secrets outside the repo | ADR 0005 | 11 | ⛔ | `infra/*`; stack verified locally, needs a VPS and GitHub secrets |
+| Caddy: TLS, SPA files, `/api` and `/ws` routing, single origin | ADR 0006 | 11 | ✅ | `infra/Caddyfile`, `web.Dockerfile`; verified with the local production stack |
