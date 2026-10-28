@@ -7,7 +7,6 @@ TierMaster is a collaborative real-time tierlist editor ("Google Docs for tierli
 **CI/CD**: Docker containers with production setup containers and images. Caddy.
 **Persistence**: Prisma + PostgreSQL, Garage as S3-compatible storage.
 **Tests**: Vitest everywhere.
-**Secrets Management**: secretspec + SOPS.
 ## Layout
 - `services/shared` (`@tiermaster/shared`): `src/types/` (zod schemas, the front/back contract) and `src/domain/`
   (pure logic: roles, permissions, ordering; no I/O, no framework imports; may import from `types/`, never the reverse).
@@ -20,21 +19,20 @@ TierMaster is a collaborative real-time tierlist editor ("Google Docs for tierli
 4. Modules talk through exported services or internal events, never through each other's repositories.
 5. Permissions are enforced server-side on every REST call and Socket.IO message. The front only updates UI depending on permissions.
 6. Only the API accesses PostgreSQL and the object storage, through the plain S3 API (`@aws-sdk/client-s3`).
-## Documentation map (read on demand, never preload everything)
+## Documentation map
 - `docs/archi/`: C1 and C2 diagrams.
-- `docs/features/`: detailed behaviour (UML and notes). Read only the files about the feature at hand.
-- `docs/mcd.md`: data model, the source of truth for the database. Never silently diverge from it: propose the change first.
-- `docs/adr/`: past decisions. Check them before changing a structural choice. Read only the files about the feature at hand.
+- `docs/features/`: detailed behaviour (UML and notes). Read the files about the feature at hand.
+- `docs/mcd.md`: data model, the source of truth for the database, keep it updated when changes are required.
+- `docs/adr/`: past decisions. Check them before changing a structural choice. Read the files about the feature at hand.
 - `docs/conformity.md`: requirement-to-slice tracking, updated at the end of every slice. If two documents disagree, stop and report it instead of choosing one.
 ## Testing strategy
 - **Unit:** exhaustive permission matrix (`effectiveRole`, `can`, `canGrant`), business rules: e.g. tierlist operations, fractional indexing.
 - **Integration:** API + real PostgreSQL (Testcontainers), fake `AuthProvider`, WebSocket scenarios with several clients (permission rejection, revocation, broadcast).
 - **No automated E2E**.
 ## Git and safety
-- Never run git write commands (commit, push, checkout, switch, merge, rebase, reset).
-- Never weaken, skip or delete a test to make it pass, add a dependency or updating the architecture: explain the problem and ask.
+- always write a commit after each feature
 ## Definition of done
-`pnpm build` and `pnpm test` pass; tests exist for each acceptance criterion; no rule above is broken; `docs/conformity.md` is updated; notable decisions have an ADR; the final report lists files touched and deviations from the plan.
-Software versions are coherently updated.
+`pnpm build` and `pnpm test` pass; tests exist for each acceptance criterion; no rule above is broken; `docs/conformity.md` is updated; `docs/mcd.md` is updated;
+Software versions are coherently updated after each feature.
 ## Conventions
 Code, comments and docs in English. Small, reviewable diffs. Keep changes within the slice's scope.
