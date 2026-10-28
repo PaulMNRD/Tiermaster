@@ -8,3 +8,4 @@ coverage/
 .devenv*
 devenv.local.nix
 .direnv/
+*.tsbuildinfo

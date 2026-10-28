@@ -1,0 +1,160 @@
+// Source of truth for the shape: docs/mcd.md. Keep both in sync.
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MemberRole {
+  MODERATOR
+  EDITOR
+  VIEWER
+}
+
+enum DefaultRole {
+  EDITOR
+  VIEWER
+}
+
+model User {
+  id                  String         @id @default(uuid()) @db.Uuid
+  email               String?
+  /// Pseudonym, chosen on first login (null until then).
+  name                String?        @unique
+  /// Lower-cased pseudonym, for case-insensitive uniqueness and search.
+  nameKey             String?        @unique
+  /// Avatar URL given by the OAuth provider.
+  avatarUrl           String?
+  /// Uploaded avatar in object storage; takes precedence over avatarUrl.
+  avatarKey           String?
+  createdAt           DateTime       @default(now())
+  oauthAccounts       OAuthAccount[]
+  ownedTierlists      Tierlist[]
+  memberships         Membership[]
+  ops                 TierlistOp[]
+  invitationsCreated  Invitation[]   @relation("InvitationCreator")
+  invitationsReceived Invitation[]   @relation("InvitationInvitee")
+
+  @@map("user")
+}
+
+model OAuthAccount {
+  id             String @id @default(uuid()) @db.Uuid
+  userId         String @db.Uuid
+  /// google, discord, steam (or fake in development and tests)
+  provider       String
+  providerUserId String
+  user           User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("oauth_account")
+}
+
+model Tierlist {
+  id          String       @id @default(uuid()) @db.Uuid
+  ownerId     String       @db.Uuid
+  title       String
+  defaultRole DefaultRole?
+  /// Operation counter, incremented by every write.
+  rev         Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  owner       User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  memberships Membership[]
+  categories  Category[]
+  cards       Card[]
+  ops         TierlistOp[]
+  invitations Invitation[]
+
+  @@index([ownerId])
+  @@index([defaultRole])
+  @@map("tierlist")
+}
+
+model Membership {
+  userId     String     @db.Uuid
+  tierlistId String     @db.Uuid
+  role       MemberRole
+  createdAt  DateTime   @default(now())
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tierlist   Tierlist   @relation(fields: [tierlistId], references: [id], onDelete: Cascade)
+
+  @@id([userId, tierlistId])
+  @@index([tierlistId])
+  @@map("membership")
+}
+
+model Category {
+  id         String   @id @default(uuid()) @db.Uuid
+  tierlistId String   @db.Uuid
+  name       String
+  color      String
+  /// Fractional index.
+  position   String
+  tierlist   Tierlist @relation(fields: [tierlistId], references: [id], onDelete: Cascade)
+  cards      Card[]
+
+  @@index([tierlistId])
+  @@map("category")
+}
+
+model Card {
+  id         String    @id @default(uuid()) @db.Uuid
+  tierlistId String    @db.Uuid
+  /// null means the unsorted pool.
+  categoryId String?   @db.Uuid
+  title      String
+  imageKey   String?
+  /// Fractional index inside the category (or the pool).
+  position   String
+  tierlist   Tierlist  @relation(fields: [tierlistId], references: [id], onDelete: Cascade)
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([tierlistId])
+  @@map("card")
+}
+
+model TierlistOp {
+  tierlistId String   @db.Uuid
+  rev        Int
+  type       String
+  payload    Json
+  authorId   String?  @db.Uuid
+  /// Client-generated id, makes retries idempotent.
+  clientOpId String?
+  createdAt  DateTime @default(now())
+  tierlist   Tierlist @relation(fields: [tierlistId], references: [id], onDelete: Cascade)
+  author     User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@id([tierlistId, rev])
+  @@unique([tierlistId, clientOpId])
+  @@map("tierlist_op")
+}
+
+model Invitation {
+  id          String     @id @default(uuid()) @db.Uuid
+  tierlistId  String     @db.Uuid
+  role        MemberRole
+  /// SHA-256 of the link token (link invitations only).
+  tokenHash   String?    @unique
+  /// Invited user (personal invitations by pseudonym only).
+  inviteeId   String?    @db.Uuid
+  createdById String     @db.Uuid
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime   @default(now())
+  tierlist    Tierlist   @relation(fields: [tierlistId], references: [id], onDelete: Cascade)
+  invitee     User?      @relation("InvitationInvitee", fields: [inviteeId], references: [id], onDelete: Cascade)
+  createdBy   User       @relation("InvitationCreator", fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@unique([tierlistId, inviteeId])
+  @@index([inviteeId])
+  @@map("invitation")
+}

@@ -1,13 +1,19 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  // Resolves the path aliases declared in tsconfig.json, including the ones
-  // added by `nest g library`.
-  plugins: [tsconfigPaths()],
+  resolve: {
+    tsconfigPaths: true,
+    // Tests run against the shared sources, so they never depend on a stale build.
+    alias: { '@tiermaster/shared': fileURLToPath(new URL('../shared/src/index.ts', import.meta.url)) },
+  },
   test: {
     globals: true,
     root: './',
-    include: ['**/*.spec.ts'],
+    include: ['src/**/*.spec.ts', 'test/**/*.spec.ts'],
+    // Unit tests run in milliseconds; integration tests share one PostgreSQL container (Testcontainers).
+    globalSetup: ['./test/global-setup.ts'],
+    testTimeout: 20_000,
+    hookTimeout: 60_000,
   },
 });
