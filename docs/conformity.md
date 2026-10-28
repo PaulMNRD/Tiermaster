@@ -40,3 +40,12 @@ Updated at the end of every slice. Status: ✅ done, 🟡 partial, ⏳ todo, ⛔
 | Gap detection, `/ops` replay, 410 snapshot reload, rejoin and resync after reconnection | real-time-collaboration.md | 6 | ✅ | `tierlist.store.spec.ts` |
 | Drag and drop (mobile-first: touch delay, mixed orientation), card/category editing UI | request | 6 | 🟡 | `tierlist.page.ts` (CDK); rendering tested in `tierlist.page.spec.ts`, gestures not automated (no E2E) |
 | Connection status indicator with manual retry | request | 6 | ✅ | `ui/connection-indicator.ts`, `RealtimeService` |
+| Members list; change role and remove with `canGrant`, checked inside the write transaction | roles-and-permissions.md | 7 | ✅ | `api/test/sharing/members.spec.ts` |
+| Moderator rules (no moderator grant, no moderator/owner target), owner-only moderator management | roles-and-permissions.md | 7 | ✅ | `members.spec.ts` (`rejected`) |
+| Leave a tierlist (members only, owner cannot) | roles-and-permissions.md | 7 | ✅ | `members.spec.ts` (`leave`) |
+| Live revocation and downgrade (removal, demotion, leave, fallback to defaultRole) | roles-and-permissions.md | 7 | ✅ | `members.spec.ts` (`revoked mid-session (live)`) |
+| Invitation links: 24h, hashed token shown once, revocable, reusable, never lower a role | sharing-and-invitations.md | 7 | ✅ | `api/test/sharing/invitations.spec.ts` (links) |
+| Invitations by pseudonym with accept / decline, live notification, listed on the home page | request | 7 | ✅ | `invitations.spec.ts` (by pseudonym); front `home.page.spec.ts` |
+| Invitation management visibility (owner all, moderator own or assignable); creator demoted -> invitations revoked | sharing-and-invitations.md | 7 | ✅ | `invitations.spec.ts` (management), `members.spec.ts` |
+| User search by pseudonym only, capped, `excludeMembersOf` restricted | sharing-and-invitations.md | 7 | ✅ | `api/test/sharing/user-search.spec.ts` |
+| Settings page (rename, visibility, members, invitations, leave, delete) by role; join page | request | 7 | ✅ | front `settings.page.spec.ts`, `join.page.spec.ts` |

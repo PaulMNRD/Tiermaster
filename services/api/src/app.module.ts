@@ -6,6 +6,7 @@ import { ConfigModule } from './config/config.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { RealtimeModule } from './modules/realtime/realtime.module.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { SharingModule } from './modules/sharing/sharing.module.js';
 import { TierlistsModule } from './modules/tierlists/tierlists.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 
@@ -22,6 +23,7 @@ export class AppModule {
         UsersModule,
         AuthModule,
         TierlistsModule,
+        SharingModule,
         RealtimeModule,
       ],
     };

@@ -5,6 +5,7 @@ import { toApiFailure } from '../../core/api/api-error';
 import { TierlistsApi } from '../../core/api/tierlists.api';
 import { TranslatePipe } from '../../core/i18n/translate.pipe';
 import { SearchBar } from '../../ui/search-bar';
+import { PendingInvitations } from './pending-invitations';
 import { EmptyState, ErrorState, LoadingState } from '../../ui/states';
 import { TierlistTile } from '../../ui/tierlist-tile';
 
@@ -23,6 +24,8 @@ import { TierlistTile } from '../../ui/tierlist-tile';
         <p class="text-sm text-red-600" role="alert">{{ createError()! | t }}</p>
       }
 
+      <tm-pending-invitations (changed)="list.reload()" />
+
       <tm-search-bar placeholder="home.searchPlaceholder" [(q)]="q" [(sort)]="sort" />
 
       @if (list.isLoading() && !list.hasValue()) {
@@ -40,7 +43,7 @@ import { TierlistTile } from '../../ui/tierlist-tile';
       }
     </section>
   `,
-  imports: [TranslatePipe, SearchBar, TierlistTile, LoadingState, ErrorState, EmptyState],
+  imports: [TranslatePipe, PendingInvitations, SearchBar, TierlistTile, LoadingState, ErrorState, EmptyState],
 })
 export default class HomePage {
   private readonly api = inject(TierlistsApi);

@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Patch } from '@nestjs/common';
-import { type Me, type UpdateMe, UpdateMeSchema } from '@tiermaster/shared';
+import { Body, Controller, Get, Patch, Query } from '@nestjs/common';
+import { type Me, type PublicUser, type UpdateMe, UpdateMeSchema, type UserSearchQuery, UserSearchQuerySchema } from '@tiermaster/shared';
 import { type AuthUser, CurrentUser, RequireUser } from '../../common/auth.js';
 import { ZodPipe } from '../../common/zod.pipe.js';
 import { UsersService } from './users.service.js';
@@ -18,5 +18,11 @@ export class UsersController {
   @RequireUser({ allowWithoutPseudonym: true })
   update(@CurrentUser() user: AuthUser, @Body(new ZodPipe(UpdateMeSchema)) body: UpdateMe): Promise<Me> {
     return this.users.setPseudonym(user.id, body.name);
+  }
+
+  @Get('users/search')
+  @RequireUser()
+  async search(@CurrentUser() user: AuthUser, @Query(new ZodPipe(UserSearchQuerySchema)) query: UserSearchQuery): Promise<{ users: PublicUser[] }> {
+    return { users: await this.users.search(user, query) };
   }
 }

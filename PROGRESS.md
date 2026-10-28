@@ -47,7 +47,7 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 - Front: drag and drop (CDK, touch), optimistic UI with pending ops, rollback on 4xx, gap detection and resync.
 - Multi-client tests: broadcast, rejected join, anonymous capped.
 
-### 7. Sharing — todo
+### 7. Sharing — done
 - Members list; change role / remove with `canGrant` (moderator rules), checked in a transaction.
 - Invitations by pseudonym (accept / decline) and by link (24h, hashed token, revocable).
 - Accepting never lowers a role; pending invitations notified on the home page.

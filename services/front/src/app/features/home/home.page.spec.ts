@@ -3,7 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { I18nService } from '../../core/i18n/i18n.service';
-import { settle, summary } from '../../../testing/helpers';
+import { realtimeStub, settle, summary } from '../../../testing/helpers';
+import { RealtimeService } from '../../core/realtime/realtime.service';
 import HomePage from './home.page';
 
 describe('HomePage', () => {
@@ -12,7 +13,7 @@ describe('HomePage', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HomePage],
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting(), { provide: RealtimeService, useValue: realtimeStub }],
     });
     TestBed.inject(I18nService).setLang('en');
     http = TestBed.inject(HttpTestingController);
@@ -34,6 +35,16 @@ describe('HomePage', () => {
     expect(el.textContent).toContain('Owner');
     expect(el.textContent).toContain('Shared');
     expect(el.textContent).toContain('Viewer');
+  });
+
+  it('lists pending invitations and accepts one', async () => {
+    const el = await render((url) => http.expectOne(url).flush({ items: [] }));
+    http.expectOne('/api/me/invitations').flush({
+      invitations: [{ id: crypto.randomUUID(), tierlist: { id: crypto.randomUUID(), title: 'Pizza' }, role: 'EDITOR', invitedBy: 'Bob', expiresAt: new Date().toISOString() }],
+    });
+    await settle();
+    expect(el.textContent).toContain('Pending invitations (1)');
+    expect(el.textContent).toContain('Bob invites you to');
   });
 
   it('shows an empty state', async () => {

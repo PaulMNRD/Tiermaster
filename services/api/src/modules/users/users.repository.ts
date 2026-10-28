@@ -3,6 +3,8 @@ import { PrismaService } from '../../adapters/prisma/prisma.service.js';
 import { Prisma } from '../../generated/prisma/client.js';
 import type { OAuthProfile } from '../../ports/auth-provider.port.js';
 
+export const SEARCH_LIMIT = 10;
+
 @Injectable()
 export class UsersRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -38,5 +40,20 @@ export class UsersRepository {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') return false;
       throw error;
     }
+  }
+
+  /** Pseudonym search (partial, case-insensitive). Email is never searched. */
+  search(q: string, excludeMembersOf?: string) {
+    return this.prisma.user.findMany({
+      where: {
+        nameKey: { contains: q.toLowerCase() },
+        ...(excludeMembersOf
+          ? { memberships: { none: { tierlistId: excludeMembersOf } }, ownedTierlists: { none: { id: excludeMembersOf } } }
+          : {}),
+      },
+      orderBy: { nameKey: 'asc' },
+      take: SEARCH_LIMIT,
+      select: { id: true, name: true, avatarKey: true, avatarUrl: true },
+    });
   }
 }

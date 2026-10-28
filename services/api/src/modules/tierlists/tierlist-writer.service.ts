@@ -19,7 +19,8 @@ export interface WriteRequest<T extends TierlistEventType> {
   tierlistId: string;
   authorize: Authorization;
   clientOpId?: string;
-  apply: (tx: Tx, ctx: AccessContext) => Promise<Change<T>>;
+  /** Returns the change to log, or null when nothing changed (no rev increment, no event). */
+  apply: (tx: Tx, ctx: AccessContext) => Promise<Change<T> | null>;
 }
 
 /**
@@ -36,6 +37,7 @@ export class TierlistWriter {
     @Inject(REALTIME_BROADCASTER) private readonly broadcaster: RealtimeBroadcaster,
   ) {}
 
+  /** `duplicate` is true when nothing was applied (retried clientOpId, or a change that turned out to be a no-op). */
   async write<T extends TierlistEventType>(request: WriteRequest<T>): Promise<{ rev: number; duplicate: boolean }> {
     const outcome = await this.transactions.run(async (tx) => {
       const ctx = await this.access.lockAndAuthorize(tx, request.user, request.tierlistId, request.authorize);
@@ -47,6 +49,7 @@ export class TierlistWriter {
         }
       }
       const change = await request.apply(tx, ctx);
+      if (change === null) return { rev: ctx.tierlist.rev, duplicate: true as const };
       const event = {
         tierlistId: request.tierlistId,
         rev: ctx.tierlist.rev + 1,

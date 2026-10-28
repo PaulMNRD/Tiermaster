@@ -97,7 +97,7 @@ describe('applyEvent', () => {
 
   it('does not mutate the input state', () => {
     const before = state();
-    const copy = structuredClone(before);
+    const copy = JSON.parse(JSON.stringify(before)) as TierlistState;
     applyEvent(before, ev('card.deleted', { cardId: c(1) }));
     expect(before).toEqual(copy);
   });

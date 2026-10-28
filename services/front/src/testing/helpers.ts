@@ -45,3 +45,13 @@ export function snapshot(overrides: Partial<TierlistSnapshot> = {}): TierlistSna
   };
 }
 
+
+/** Inert RealtimeService for component tests (no socket is opened). */
+export const realtimeStub = {
+  status: () => 'connected',
+  on: () => () => {},
+  onReconnect: () => () => {},
+  leave: () => {},
+  reconnect: () => {},
+  join: async () => ({ ok: true, effectiveRole: 'VIEWER', rev: 0 }),
+};
