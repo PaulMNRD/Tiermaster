@@ -33,11 +33,10 @@ services:
       S3_BUCKET: tiermaster-images
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
+      # V1 signs in with Google only. Discord and Steam are disabled in production: their variables are not passed, so the
+      # API does not offer them (the adapters stay in the code; docs/production-setup.md explains how to re-enable them).
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID:-}
-      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET:-}
-      STEAM_API_KEY: ${STEAM_API_KEY:-}
     depends_on:
       postgres:
         condition: service_healthy

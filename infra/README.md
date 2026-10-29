@@ -13,6 +13,9 @@ Garage. Every push to `main` that passes the tests is deployed by `.github/workf
 | `dev.Dockerfile`, `dev-entrypoint.sh` | Development toolchain image used by `docker-compose.dev.yml` (not deployed) |
 | `deploy.sh` | Runs on the VPS: pull images of a tag, `up -d`, Garage init, prune |
 
+The step-by-step protocol, from a fresh VPS to a working Google sign-in, is in
+[docs/production-setup.md](../docs/production-setup.md). This file is the short reference.
+
 ## One-time VPS setup
 
 1. Install Docker Engine with the Compose plugin; create a deploy user in the `docker` group.
@@ -29,12 +32,9 @@ Garage. Every push to `main` that passes the tests is deployed by `.github/workf
    S3_SECRET_KEY=<64 hex>
    GARAGE_RPC_SECRET=<64 hex>          # openssl rand -hex 32
    GARAGE_ADMIN_TOKEN=<random>
-   # Sign-in providers (at least one is needed in production)
+   # Sign-in: Google only in V1 (Discord and Steam are not passed to the API by docker-compose.prod.yml)
    GOOGLE_CLIENT_ID=
    GOOGLE_CLIENT_SECRET=
-   DISCORD_CLIENT_ID=
-   DISCORD_CLIENT_SECRET=
-   STEAM_API_KEY=
    ```
 
 4. If the GHCR packages stay private, log the VPS in once: `docker login ghcr.io -u <user>` with a token that has `read:packages`.

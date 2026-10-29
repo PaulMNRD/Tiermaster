@@ -114,8 +114,8 @@ page as soon as their credentials are configured (see below).
 | `COOKIE_SECURE` | `false` | `true` behind HTTPS |
 | `AUTH_FAKE_ENABLED` | `false` | Development sign-in; refused in production |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | — | Enables Google; callback `{PUBLIC_URL}/api/auth/google/callback` |
-| `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | — | Enables Discord; callback `{PUBLIC_URL}/api/auth/discord/callback` |
-| `STEAM_API_KEY` | — | Enables Steam (OpenID 2.0) |
+| `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET` | — | Enables Discord; callback `{PUBLIC_URL}/api/auth/discord/callback`. Not passed in production (V1) |
+| `STEAM_API_KEY` | — | Enables Steam (OpenID 2.0). Not passed in production (V1) |
 | `STORAGE_DRIVER` | `s3` if `S3_ENDPOINT` is set, else `memory` | `memory` is refused in production |
 | `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`, `S3_FORCE_PATH_STYLE` | — / `us-east-1` / — / — / `tiermaster-images` / `false` | Garage or any S3 API |
 | `RATE_LIMIT_WRITES_PER_MINUTE` / `_UPLOADS_` / `_SEARCHES_` | 120 / 20 / 60 | Per user (per IP when anonymous) |
@@ -128,7 +128,8 @@ Health check: `GET /api/health` (checks the database, 503 when it is down).
 Production runs on one VPS with Docker Compose behind Caddy (ADR 0005, ADR 0006): `infra/docker-compose.prod.yml` runs Caddy
 (TLS, SPA files, `/api` and `/ws` proxy), the API, PostgreSQL and Garage. GitHub Actions (`.github/workflows/ci.yml`) builds and
 tests every push and pull request inside the devenv shell; on `main` it publishes the images to GHCR and deploys over SSH.
-See [infra/README.md](infra/README.md) for the VPS setup and the secrets to configure.
+See [docs/production-setup.md](docs/production-setup.md) for the step-by-step setup from a fresh VPS (V1: Google sign-in only)
+and [infra/README.md](infra/README.md) for the reference of files and secrets.
 
 ## Documentation
 

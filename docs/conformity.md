@@ -13,7 +13,7 @@ Updated at the end of every slice. Status: ✅ done, 🟡 partial, ⏳ todo, ⛔
 | Migrations versioned and applied on a real PostgreSQL | AGENTS.md (testing) | 2 | ✅ | `api/prisma/migrations`, `api/test/global-setup.ts` (Testcontainers) |
 | Seed script with demo data (idempotent) | request | 2 | ✅ | `api/src/seed/seed.ts`, `schema.spec.ts` |
 | Health endpoint | request | 2 | ✅ | `api/test/health/health.spec.ts` |
-| OAuth sign-in through the `AuthProvider` port (Google, Discord, Steam adapters; fake provider) | authentication.md, ADR 0002 | 3 | 🟡 | `api/src/adapters/auth/*`; fake flow tested in `api/test/auth/auth.spec.ts`. Real providers need credentials (⛔) |
+| OAuth sign-in through the `AuthProvider` port (Google, Discord, Steam adapters; fake provider) | authentication.md, ADR 0002 | 3 | 🟡 | `api/src/adapters/auth/*`; fake flow tested in `api/test/auth/auth.spec.ts`. Real providers need credentials (⛔). Production V1: Google only (Discord, Steam not passed by `docker-compose.prod.yml`) |
 | OAuth state verified, no open redirect | authentication.md | 3 | ✅ | `auth.spec.ts` (`rejected` block) |
 | API-issued session (httpOnly cookie), `GET /api/me`, logout | authentication.md | 3 | ✅ | `auth.spec.ts`, `api/src/modules/auth/session.service.spec.ts` |
 | Pseudonym on first login, unique, required before use | ADR 0002, request | 3 | ✅ | `auth.spec.ts`; front `welcome.page.ts`, `auth.guards.spec.ts` |
@@ -65,5 +65,5 @@ Updated at the end of every slice. Status: ✅ done, 🟡 partial, ⏳ todo, ⛔
 | Architecture as built | request | 10 | ✅ | `docs/archi/architecture.md`; C1 role names updated |
 | App starts with `devenv up` (PostgreSQL, Garage, API with migrations, front) | request | 10 | ✅ | Verified: health, fake login, upload to Garage and socket join through the dev proxy |
 | CI: build and test on every push and PR inside the devenv shell | ADR 0005 | 11 | 🟡 | `.github/workflows/ci.yml` (valid; not yet run on GitHub) |
-| CD: images to GHCR, deploy to the VPS with Docker Compose, `restart: unless-stopped`, secrets outside the repo | ADR 0005 | 11 | ⛔ | `infra/*`; stack verified locally, needs a VPS and GitHub secrets |
+| CD: images to GHCR, deploy to the VPS with Docker Compose, `restart: unless-stopped`, secrets outside the repo | ADR 0005 | 11 | ⛔ | `infra/*`; stack verified locally, needs a VPS and GitHub secrets; protocol in `docs/production-setup.md` |
 | Caddy: TLS, SPA files, `/api` and `/ws` routing, single origin | ADR 0006 | 11 | ✅ | `infra/Caddyfile`, `web.Dockerfile`; verified with the local production stack |

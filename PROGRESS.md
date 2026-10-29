@@ -207,8 +207,9 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
 ## Open questions / needs your input
 - **Production deployment inputs**: a VPS with Docker, a domain, the `.env` secrets and the GitHub secrets listed in
   `infra/README.md` (`VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, `VPS_KNOWN_HOSTS`). The workflow has not run on GitHub yet.
-- OAuth client credentials for Google and Discord, and a Steam Web API key (production). Until then only the fake provider works
-  (development). Callback URLs to register: `{PUBLIC_URL}/api/auth/google/callback`, `{PUBLIC_URL}/api/auth/discord/callback`.
+- OAuth client credentials for Google (production). V1 ships with Google only: Discord and Steam are not passed to the API by
+  `infra/docker-compose.prod.yml` (adapters kept). Callback URL to register: `{PUBLIC_URL}/api/auth/google/callback`.
+  Step-by-step production setup: `docs/production-setup.md`.
 
 ## Final report
 
