@@ -3,6 +3,8 @@
 Collaborative, real-time tierlist editor ("Google Docs for tierlists"): create tierlists, rank cards by drag and drop on
 desktop or phone, share them with per-tierlist roles, and see everyone's changes live.
 
+Go https://0hk2tcr.cserverhost.cloud/
+
 - **Roles**: owner, moderator, editor, viewer, plus a per-tierlist default role (private, public read-only, public editable).
 - **Real time**: optimistic drag and drop, live updates, live revocation, reconnection with full resynchronization.
 - **Sharing**: invitations by pseudonym (accept / decline) or by link (24 h), member management with moderator rules.
