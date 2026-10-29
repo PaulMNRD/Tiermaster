@@ -25,7 +25,7 @@ describe('invitations', () => {
     it('a moderator creates a link; anyone holding it can preview and accept', async () => {
       const f = await roleFixture(t);
       const res = await invite(f.moderator, f.tierlist.id, { role: 'EDITOR' }).expect(201);
-      expect(res.body.url).toMatch(/^http:\/\/localhost:4200\/join\/[A-Za-z0-9_-]{43}$/);
+      expect(res.body.url).toMatch(/^http:\/\/localhost:4226\/join\/[A-Za-z0-9_-]{43}$/);
       expect(res.body.invitation).toMatchObject({ kind: 'link', role: 'EDITOR', invitee: null });
       const token = tokenOf(res.body.url);
 

@@ -26,7 +26,9 @@ docs/             architecture (C1, C2, architecture.md), features, ADRs, data m
 ## Running locally
 
 Two ways, each in one command: with Nix/devenv, or with Docker Compose only.
-Both start the SPA on <http://localhost:4200> (it proxies `/api` and `/ws` to the API on port 3000).
+Both start the SPA on <http://localhost:4226> (it proxies `/api` and `/ws` to the API on port 3226). Development uses
+uncommon ports to avoid clashes with other local projects: SPA 4226, API 3226, PostgreSQL 5426, Garage S3 3926 (devenv
+also uses 3927 for Garage RPC and 3928 for its admin API).
 
 ### Option A: NixOS / devenv
 
@@ -56,7 +58,7 @@ docker compose -f docker-compose.dev.yml up --build
 This starts PostgreSQL 18 and Garage, initializes Garage (layout, key, bucket), installs the dependencies, builds `shared`
 and the API, applies the migrations, loads the demo data (idempotent) and runs the API in watch mode and the SPA dev server.
 Sources are bind-mounted, so edits reload live; `node_modules` live in Docker volumes (Linux binaries, separate from the
-host's). Ports: SPA 4200, API 3000, PostgreSQL 5432, Garage S3 3900 (all on 127.0.0.1). Credentials are the development
+host's). Ports: SPA 4226, API 3226, PostgreSQL 5426, Garage S3 3926 (all on 127.0.0.1). Credentials are the development
 defaults of `devenv.nix`.
 
 ```sh
@@ -71,17 +73,17 @@ To run the API and the front on the host instead (Node 24 and pnpm 11 required),
 docker compose -f docker-compose.dev.yml up -d postgres garage-init   # PostgreSQL 18 and an initialized Garage
 
 # Same development defaults as devenv.nix
-export DATABASE_URL=postgresql://tiermaster:tiermaster@localhost:5432/tiermaster
-export S3_ENDPOINT=http://127.0.0.1:3900 S3_REGION=us-east-1 S3_FORCE_PATH_STYLE=true S3_BUCKET=tiermaster-images
+export DATABASE_URL=postgresql://tiermaster:tiermaster@localhost:5426/tiermaster
+export S3_ENDPOINT=http://127.0.0.1:3926 S3_REGION=us-east-1 S3_FORCE_PATH_STYLE=true S3_BUCKET=tiermaster-images
 export S3_ACCESS_KEY=GK1a2b3c4d5e6f1a2b3c4d5e6f
 export S3_SECRET_KEY=a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718
-export AUTH_FAKE_ENABLED=true PUBLIC_URL=http://localhost:4200
+export AUTH_FAKE_ENABLED=true PUBLIC_URL=http://localhost:4226
 
 pnpm install && pnpm build
 pnpm --filter api exec prisma migrate deploy
 pnpm --filter api seed                      # demo data (idempotent)
-pnpm --filter api start:dev                 # API on :3000 (terminal 1)
-pnpm --filter front start                   # SPA on :4200 (terminal 2)
+pnpm --filter api start:dev                 # API on :3226 (terminal 1)
+pnpm --filter front start                   # SPA on :4226 (terminal 2)
 ```
 
 Without Garage, set `STORAGE_DRIVER=memory` (images are then lost on restart).
@@ -107,7 +109,7 @@ page as soon as their credentials are configured (see below).
 | Variable | Default | Notes |
 | --- | --- | --- |
 | `DATABASE_URL` | — | PostgreSQL connection string (required) |
-| `PUBLIC_URL` | `http://localhost:4200` | Public origin; used for OAuth callbacks, redirects and invitation links |
+| `PUBLIC_URL` | `http://localhost:4226` | Public origin; used for OAuth callbacks, redirects and invitation links |
 | `SESSION_SECRET` | dev value | ≥ 32 characters, **required in production** |
 | `COOKIE_SECURE` | `false` | `true` behind HTTPS |
 | `AUTH_FAKE_ENABLED` | `false` | Development sign-in; refused in production |
@@ -117,7 +119,7 @@ page as soon as their credentials are configured (see below).
 | `STORAGE_DRIVER` | `s3` if `S3_ENDPOINT` is set, else `memory` | `memory` is refused in production |
 | `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`, `S3_FORCE_PATH_STYLE` | — / `us-east-1` / — / — / `tiermaster-images` / `false` | Garage or any S3 API |
 | `RATE_LIMIT_WRITES_PER_MINUTE` / `_UPLOADS_` / `_SEARCHES_` | 120 / 20 / 60 | Per user (per IP when anonymous) |
-| `PORT` | `3000` | |
+| `PORT` | `3226` | The production image sets 3000 |
 
 Health check: `GET /api/health` (checks the database, 503 when it is down).
 

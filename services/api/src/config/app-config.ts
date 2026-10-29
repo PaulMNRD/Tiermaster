@@ -10,10 +10,10 @@ const DEV_SESSION_SECRET = 'dev-only-session-secret-change-me-in-production';
 export const AppConfigSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-    PORT: z.coerce.number().int().default(3000),
+    PORT: z.coerce.number().int().default(3226),
     DATABASE_URL: z.string().min(1),
     /** Public origin of the application (SPA and API share it behind the reverse proxy). */
-    PUBLIC_URL: z.url().default('http://localhost:4200'),
+    PUBLIC_URL: z.url().default('http://localhost:4226'),
     SESSION_SECRET: z.string().min(32).default(DEV_SESSION_SECRET),
     COOKIE_SECURE: booleanString,
     /** Enables the fake OAuth provider (development and tests only). */

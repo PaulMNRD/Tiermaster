@@ -181,6 +181,10 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
   volumes. `infra/dev-entrypoint.sh` runs commands as the owner of the repository (root under rootless Docker, the host
   UID otherwise) so generated files stay owned by the host user. The dev proxy target is `API_PROXY_TARGET`
   (`proxy.conf.mjs`). The project is named `tiermaster-dev` so it never collides with the local production stack.
+- **Development ports**: SPA 4226, API 3226, PostgreSQL 5426, Garage 3926 (S3), 3927 (RPC), 3928 (admin), in devenv and
+  Docker Compose, so the stack can run next to other local projects. Inside the Compose network PostgreSQL and Garage keep
+  their standard ports (`garage.toml` is shared with production). The API defaults to 3226; the production image sets
+  `PORT=3000` (Caddy target), so production is unchanged. `PORT` is not exported in the dev shell because `ng serve` reads it too.
 - **Versions**: all packages share one version, bumped by `scripts/set-version.mjs` (minor per slice: slice N -> 0.N.0).
 
 ## Added dependencies

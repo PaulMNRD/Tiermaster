@@ -1,6 +1,6 @@
 # Development stack for the standard (non-Nix) setup: `docker compose -f docker-compose.dev.yml up`.
 # PostgreSQL, Garage (layout, key and bucket), the API (migrations, demo data, watch mode) and the SPA dev server
-# on http://localhost:4200. Sources are bind-mounted, so edits reload live. Development-only credentials, same as devenv.nix.
+# on http://localhost:4226. Sources are bind-mounted, so edits reload live. Development-only credentials, same as devenv.nix.
 # Infrastructure only (API and front on the host): `docker compose -f docker-compose.dev.yml up -d postgres garage-init`.
 name: tiermaster-dev
 
@@ -24,7 +24,7 @@ services:
       POSTGRES_PASSWORD: tiermaster
       POSTGRES_DB: tiermaster
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:5426:5432"
     volumes:
       - postgres-dev:/var/lib/postgresql
     healthcheck:
@@ -38,7 +38,7 @@ services:
       GARAGE_RPC_SECRET: "0000000000000000000000000000000000000000000000000000000000000001"
       GARAGE_ADMIN_TOKEN: dev-admin-token
     ports:
-      - "127.0.0.1:3900:3900"
+      - "127.0.0.1:3926:3900"
     volumes:
       - ./infra/garage/garage.toml:/etc/garage.toml:ro
       - garage-dev:/var/lib/garage
@@ -84,11 +84,11 @@ services:
       S3_ACCESS_KEY: GK1a2b3c4d5e6f1a2b3c4d5e6f
       S3_SECRET_KEY: a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718
       AUTH_FAKE_ENABLED: "true"
-      PUBLIC_URL: http://localhost:4200
+      PUBLIC_URL: http://localhost:4226
     working_dir: /repo/services/api
     command: sh -c "pnpm exec prisma migrate deploy && pnpm seed && pnpm start:dev"
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3226:3226"
     depends_on:
       deps:
         condition: service_completed_successfully
@@ -100,11 +100,11 @@ services:
   front:
     <<: *node
     environment:
-      API_PROXY_TARGET: http://api:3000
+      API_PROXY_TARGET: http://api:3226
     working_dir: /repo/services/front
     command: pnpm start --host 0.0.0.0
     ports:
-      - "127.0.0.1:4200:4200"
+      - "127.0.0.1:4226:4226"
     depends_on:
       deps:
         condition: service_completed_successfully

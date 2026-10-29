@@ -19,7 +19,7 @@ describe('authentication', () => {
   it('creates an account on first login and asks for a pseudonym', async () => {
     const { cookie, location } = await fakeOAuthLogin(t, 'newcomer');
     expect(cookie).toContain(SESSION_COOKIE);
-    expect(location).toBe('http://localhost:4200/welcome?returnTo=%2F');
+    expect(location).toBe('http://localhost:4226/welcome?returnTo=%2F');
     const me = await http().get('/api/me').set('Cookie', cookie).expect(200);
     expect(me.body).toMatchObject({ name: null, needsPseudonym: true, email: 'newcomer@fake.test' });
   });
@@ -27,7 +27,7 @@ describe('authentication', () => {
   it('sets a pseudonym, then logs back into the same account', async () => {
     const first = await signUp(t, 'Returning');
     const again = await fakeOAuthLogin(t, 'returning', '/join/abc');
-    expect(again.location).toBe('http://localhost:4200/join/abc');
+    expect(again.location).toBe('http://localhost:4226/join/abc');
     const me = await http().get('/api/me').set('Cookie', again.cookie).expect(200);
     expect(me.body).toMatchObject({ id: first.id, name: 'Returning', needsPseudonym: false });
   });
@@ -47,13 +47,13 @@ describe('authentication', () => {
       const start = await http().get('/api/auth/fake').query({ loginHint: 'mallory' }).expect(302);
       const oauth = Object.entries(cookiesFrom(start)).map(([k, v]) => `${k}=${v}`).join('; ');
       const res = await http().get('/api/auth/fake/callback?code=mallory&state=forged').set('Cookie', oauth).expect(302);
-      expect(res.headers.location).toBe('http://localhost:4200/login?error=oauth_state');
+      expect(res.headers.location).toBe('http://localhost:4226/login?error=oauth_state');
       expect(cookiesFrom(res)[SESSION_COOKIE] ?? '').toBe('');
     });
 
     it('rejects a callback without the state cookie', async () => {
       const res = await http().get('/api/auth/fake/callback?code=mallory&state=x').expect(302);
-      expect(res.headers.location).toBe('http://localhost:4200/login?error=oauth_state');
+      expect(res.headers.location).toBe('http://localhost:4226/login?error=oauth_state');
     });
 
     it('rejects an unknown or disabled provider', async () => {
@@ -63,9 +63,9 @@ describe('authentication', () => {
 
     it('ignores an absolute returnTo (open redirect)', async () => {
       const { location } = await fakeOAuthLogin(t, 'redirector', 'https://evil.example/x');
-      expect(location).toBe('http://localhost:4200/welcome?returnTo=%2F');
+      expect(location).toBe('http://localhost:4226/welcome?returnTo=%2F');
       const again = await fakeOAuthLogin(t, 'redirector', '//evil.example');
-      expect(again.location.startsWith('http://localhost:4200/')).toBe(true);
+      expect(again.location.startsWith('http://localhost:4226/')).toBe(true);
     });
 
     it('returns 401 on /api/me without a session or with a tampered one', async () => {

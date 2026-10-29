@@ -64,6 +64,7 @@
           },
           "defaultConfiguration": "development",
           "options": {
+            "port": 4226,
             "proxyConfig": "proxy.conf.mjs"
           }
         },
