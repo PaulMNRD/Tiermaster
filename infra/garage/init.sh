@@ -1,13 +1,17 @@
 #!/usr/bin/env sh
 # Idempotent Garage bootstrap: single-node layout, access key, private bucket.
 # Usage: infra/garage/init.sh <compose file> <access key id> <secret key> <bucket>
-#   e.g. infra/garage/init.sh docker-compose.dev.yml GK1a2b... a1b2... tiermaster-images
+#   e.g. infra/garage/init.sh docker-compose.prod.yml GK1a2b... a1b2... tiermaster-images
+# With GARAGE_CLI set (e.g. /garage in a container sharing the node's network), the CLI is called directly
+# and the compose file argument is ignored.
 set -eu
 COMPOSE_FILE="$1"
 KEY_ID="$2"
 SECRET="$3"
 BUCKET="$4"
-garage() { docker compose -f "$COMPOSE_FILE" exec -T garage /garage "$@"; }
+garage() {
+  if [ -n "${GARAGE_CLI:-}" ]; then "$GARAGE_CLI" "$@"; else docker compose -f "$COMPOSE_FILE" exec -T garage /garage "$@"; fi
+}
 
 # Wait for the node to answer.
 i=0

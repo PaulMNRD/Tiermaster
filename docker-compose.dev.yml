@@ -1,5 +1,21 @@
-# Development services for the standard (non-Nix) setup: PostgreSQL and Garage.
-# The API and the front run on the host (see README). Development-only credentials, same as devenv.nix.
+# Development stack for the standard (non-Nix) setup: `docker compose -f docker-compose.dev.yml up`.
+# PostgreSQL, Garage (layout, key and bucket), the API (migrations, demo data, watch mode) and the SPA dev server
+# on http://localhost:4200. Sources are bind-mounted, so edits reload live. Development-only credentials, same as devenv.nix.
+# Infrastructure only (API and front on the host): `docker compose -f docker-compose.dev.yml up -d postgres garage-init`.
+name: tiermaster-dev
+
+x-node: &node
+  build:
+    context: .
+    dockerfile: infra/dev.Dockerfile
+  image: tiermaster-dev-node
+  volumes:
+    - .:/repo
+    - node-modules:/repo/node_modules
+    - node-modules-shared:/repo/services/shared/node_modules
+    - node-modules-api:/repo/services/api/node_modules
+    - node-modules-front:/repo/services/front/node_modules
+
 services:
   postgres:
     image: postgres:18-alpine
@@ -18,7 +34,7 @@ services:
 
   garage:
     image: dxflrs/garage:v2.1.0
-    environment:
+    environment: &garage-env
       GARAGE_RPC_SECRET: "0000000000000000000000000000000000000000000000000000000000000001"
       GARAGE_ADMIN_TOKEN: dev-admin-token
     ports:
@@ -27,6 +43,76 @@ services:
       - ./infra/garage/garage.toml:/etc/garage.toml:ro
       - garage-dev:/var/lib/garage
 
+  # One-shot: runs infra/garage/init.sh with the Garage CLI, in the node's network namespace (the image has no shell).
+  garage-init:
+    build:
+      dockerfile_inline: |
+        FROM dxflrs/garage:v2.1.0 AS garage
+        FROM alpine:3.22
+        COPY --from=garage /garage /garage
+    image: tiermaster-dev-garage-init
+    network_mode: service:garage
+    environment:
+      <<: *garage-env
+      GARAGE_CLI: /garage
+    volumes:
+      - ./infra/garage:/init:ro
+      - ./infra/garage/garage.toml:/etc/garage.toml:ro
+      - garage-dev:/var/lib/garage
+    command:
+      - /init/init.sh
+      - "-"
+      - GK1a2b3c4d5e6f1a2b3c4d5e6f
+      - a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718
+      - tiermaster-images
+    depends_on:
+      - garage
+
+  # One-shot: dependencies, shared package, API build (Prisma client, seed script).
+  deps:
+    <<: *node
+    command: sh -c "pnpm install --frozen-lockfile && pnpm build:shared && pnpm --filter api build"
+
+  api:
+    <<: *node
+    environment:
+      DATABASE_URL: postgresql://tiermaster:tiermaster@postgres:5432/tiermaster
+      S3_ENDPOINT: http://garage:3900
+      S3_REGION: us-east-1
+      S3_FORCE_PATH_STYLE: "true"
+      S3_BUCKET: tiermaster-images
+      S3_ACCESS_KEY: GK1a2b3c4d5e6f1a2b3c4d5e6f
+      S3_SECRET_KEY: a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718
+      AUTH_FAKE_ENABLED: "true"
+      PUBLIC_URL: http://localhost:4200
+    working_dir: /repo/services/api
+    command: sh -c "pnpm exec prisma migrate deploy && pnpm seed && pnpm start:dev"
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      garage-init:
+        condition: service_completed_successfully
+
+  front:
+    <<: *node
+    environment:
+      API_PROXY_TARGET: http://api:3000
+    working_dir: /repo/services/front
+    command: pnpm start --host 0.0.0.0
+    ports:
+      - "127.0.0.1:4200:4200"
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+
 volumes:
   postgres-dev:
   garage-dev:
+  node-modules:
+  node-modules-shared:
+  node-modules-api:
+  node-modules-front:

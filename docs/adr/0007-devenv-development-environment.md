@@ -18,3 +18,5 @@ Development environment will be setup using Devenv, a nix based tool.
 
 ## Evolution
 Revisit when: the team grows with developers who don't use Nix (add a Docker-based alternative).
+Done: `docker-compose.dev.yml` runs the whole development stack with Docker only (README, option B); devenv stays the
+reference environment (CI).

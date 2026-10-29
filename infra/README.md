@@ -10,6 +10,7 @@ Garage. Every push to `main` that passes the tests is deployed by `.github/workf
 | `Caddyfile` | Automatic HTTPS for `$DOMAIN`, security headers, SPA fallback, immutable caching of hashed assets |
 | `docker-compose.prod.yml` | Production stack (`restart: unless-stopped`, named volumes) |
 | `garage/garage.toml`, `garage/init.sh` | Single-node Garage; idempotent layout, key and private bucket setup |
+| `dev.Dockerfile`, `dev-entrypoint.sh` | Development toolchain image used by `docker-compose.dev.yml` (not deployed) |
 | `deploy.sh` | Runs on the VPS: pull images of a tag, `up -d`, Garage init, prune |
 
 ## One-time VPS setup

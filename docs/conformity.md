@@ -61,6 +61,7 @@ Updated at the end of every slice. Status: ✅ done, 🟡 partial, ⏳ todo, ⛔
 | Empty / loading / error states; 401, 403, 404 and "not found or private" screens | request | 4-9 | ✅ | `ui/states.ts`; `home.page.spec.ts`, `tierlist.page.spec.ts`, `join.page.spec.ts` |
 | Light and dark themes, French and English, mobile-first layout | request | 3, 9 | ✅ | `ThemeService`, `I18nService` (`i18n.service.spec.ts` checks key parity); responsive Tailwind classes (manual check) |
 | README with run instructions (devenv and standard setup), configuration, commands | request | 10 | ✅ | `README.md`; both paths run end to end (devenv up, Docker Compose + init script) |
+| Standard setup in one command: `docker compose -f docker-compose.dev.yml up --build` (PostgreSQL, Garage init, API with migrations and seed, front) | request | 11 | ✅ | Verified from empty volumes on rootless Docker: health through the dev proxy, demo data, object written to Garage from the API container |
 | Architecture as built | request | 10 | ✅ | `docs/archi/architecture.md`; C1 role names updated |
 | App starts with `devenv up` (PostgreSQL, Garage, API with migrations, front) | request | 10 | ✅ | Verified: health, fake login, upload to Garage and socket join through the dev proxy |
 | CI: build and test on every push and PR inside the devenv shell | ADR 0005 | 11 | 🟡 | `.github/workflows/ci.yml` (valid; not yet run on GitHub) |

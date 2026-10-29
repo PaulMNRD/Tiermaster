@@ -174,7 +174,13 @@ Autonomous build, slice by slice. Status values: `todo`, `in progress`, `done`, 
   `prisma` moved to runtime dependencies so the container applies migrations at start-up (`prisma migrate deploy`, then
   `node dist/main.js`). The web image is Caddy with the SPA baked in; it terminates TLS and proxies `/api` and `/ws`. Garage is
   initialized idempotently by `infra/garage/init.sh` on every deploy. Images are tagged with the commit SHA and `latest`.
-- **Standard (non-Nix) dev setup**: `docker-compose.dev.yml` (PostgreSQL + Garage) with the same credentials as devenv.nix.
+- **Standard (non-Nix) dev setup**: `docker compose -f docker-compose.dev.yml up --build` runs the whole stack with the same
+  credentials as devenv.nix: PostgreSQL, Garage, a one-shot `garage-init` (`infra/garage/init.sh` with `GARAGE_CLI`, in
+  the node's network namespace since the Garage image has no shell), a one-shot `deps` (install, shared and API builds),
+  the API (migrations, seed, watch) and the SPA. Sources are bind-mounted, `node_modules` (and the pnpm store) are named
+  volumes. `infra/dev-entrypoint.sh` runs commands as the owner of the repository (root under rootless Docker, the host
+  UID otherwise) so generated files stay owned by the host user. The dev proxy target is `API_PROXY_TARGET`
+  (`proxy.conf.mjs`). The project is named `tiermaster-dev` so it never collides with the local production stack.
 - **Versions**: all packages share one version, bumped by `scripts/set-version.mjs` (minor per slice: slice N -> 0.N.0).
 
 ## Added dependencies

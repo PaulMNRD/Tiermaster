@@ -25,7 +25,7 @@ docs/             architecture (C1, C2, architecture.md), features, ADRs, data m
 
 ## Running locally
 
-Two ways: with Nix/devenv (everything in one command), or with any Node 24 + pnpm + Docker setup.
+Two ways, each in one command: with Nix/devenv, or with Docker Compose only.
 Both start the SPA on <http://localhost:4200> (it proxies `/api` and `/ws` to the API on port 3000).
 
 ### Option A: NixOS / devenv
@@ -45,17 +45,30 @@ pnpm --filter api seed
 
 Every other command (`pnpm build`, `pnpm test`, ...) runs inside `devenv shell`.
 
-### Option B: standard setup (Node 24, pnpm, Docker)
+### Option B: Docker Compose
 
-Requirements: Node.js 24, pnpm 11 (`corepack enable` or `npm i -g pnpm`), Docker with Compose.
+Requirements: Docker with Compose (v2.20+). Nothing else on the host.
 
 ```sh
-pnpm install
-docker compose -f docker-compose.dev.yml up -d             # PostgreSQL 18 and Garage
-infra/garage/init.sh docker-compose.dev.yml \
-  GK1a2b3c4d5e6f1a2b3c4d5e6f \
-  a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718 \
-  tiermaster-images                                         # layout, key and bucket (idempotent)
+docker compose -f docker-compose.dev.yml up --build
+```
+
+This starts PostgreSQL 18 and Garage, initializes Garage (layout, key, bucket), installs the dependencies, builds `shared`
+and the API, applies the migrations, loads the demo data (idempotent) and runs the API in watch mode and the SPA dev server.
+Sources are bind-mounted, so edits reload live; `node_modules` live in Docker volumes (Linux binaries, separate from the
+host's). Ports: SPA 4200, API 3000, PostgreSQL 5432, Garage S3 3900 (all on 127.0.0.1). Credentials are the development
+defaults of `devenv.nix`.
+
+```sh
+docker compose -f docker-compose.dev.yml down        # stop (add -v to also drop the database, images and node_modules)
+docker compose -f docker-compose.dev.yml run --rm deps   # after changing dependencies (re-runs pnpm install and builds)
+docker compose -f docker-compose.dev.yml run --rm --no-deps api pnpm exec prisma migrate dev --name <change>
+```
+
+To run the API and the front on the host instead (Node 24 and pnpm 11 required), start only the infrastructure:
+
+```sh
+docker compose -f docker-compose.dev.yml up -d postgres garage-init   # PostgreSQL 18 and an initialized Garage
 
 # Same development defaults as devenv.nix
 export DATABASE_URL=postgresql://tiermaster:tiermaster@localhost:5432/tiermaster
@@ -64,7 +77,7 @@ export S3_ACCESS_KEY=GK1a2b3c4d5e6f1a2b3c4d5e6f
 export S3_SECRET_KEY=a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718a1b2c3d4e5f60718
 export AUTH_FAKE_ENABLED=true PUBLIC_URL=http://localhost:4200
 
-pnpm build                                  # shared package, API (generates the Prisma client), front
+pnpm install && pnpm build
 pnpm --filter api exec prisma migrate deploy
 pnpm --filter api seed                      # demo data (idempotent)
 pnpm --filter api start:dev                 # API on :3000 (terminal 1)
