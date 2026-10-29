@@ -135,3 +135,32 @@ See [infra/README.md](infra/README.md) for the VPS setup and the secrets to conf
 - [docs/adr](docs/adr): architecture decisions
 - [docs/mcd.md](docs/mcd.md): data model (source of truth for the database)
 - [docs/conformity.md](docs/conformity.md): requirement-to-slice tracking
+
+## Summary: architecture, documentation and way of working
+
+**Architecture.** A modular monolith (ADR 0001): an Angular SPA and a NestJS API on one origin behind Caddy (ADR 0006), with
+PostgreSQL through Prisma and images in Garage through the plain S3 API (ADR 0008). `@tiermaster/shared` is the contract: zod
+schemas validate every REST and Socket.IO message on both sides, and pure domain functions (`effectiveRole`, `can`,
+`canGrant`, fractional indexing, the event reducer) hold the business rules (ADR 0004). API modules follow
+`controller -> service -> repository` and only talk through exported services or events. Ports and adapters are used where a
+swap is real: `AuthProvider` (Google, Discord, Steam, fake; ADR 0002), `ObjectStorage` (S3, in memory) and
+`RealtimeBroadcaster`. Every write locks its tierlist, bumps a revision and logs an op in one transaction, then broadcasts it
+to the tierlist's Socket.IO room; the SPA applies optimistic updates, replays missed ops by revision and re-checks access on
+every reconnection. Permissions are always enforced server-side; the front only adapts the UI.
+
+**Documentation.**
+- [AGENTS.md](AGENTS.md): stack, layout, architecture rules and definition of done.
+- [docs/archi](docs/archi): C1 context, C2 containers and the architecture as built.
+- [docs/features](docs/features): behaviour per feature (UML and notes).
+- [docs/adr](docs/adr): one record per structural decision (context, options, consequences, when to revisit).
+- [docs/mcd.md](docs/mcd.md): the data model, source of truth for the Prisma schema.
+- [docs/conformity.md](docs/conformity.md): each requirement mapped to its slice, status and evidence.
+- [PROGRESS.md](PROGRESS.md): slice log, decisions, added dependencies and open questions.
+
+**Way of working.** The project is built in vertical slices (permissions core, data model, auth, CRUD, real time, sharing,
+images, polish, docs, CI/CD), each delivered as a small, reviewable commit. Features are specified in `docs/features` and
+decisions recorded as ADRs before structural changes. A slice is done when `pnpm build` and `pnpm test` pass, every acceptance
+criterion has a test (unit tests for the domain, integration tests on a real PostgreSQL with multi-client WebSocket scenarios,
+component tests for the front; no automated E2E), the conformity table and data model are updated, and all packages are bumped
+to the same version. Development runs in a reproducible environment (devenv, or Docker Compose), and CI builds and tests every
+push in that same environment before publishing images and deploying to the VPS (ADR 0005).
